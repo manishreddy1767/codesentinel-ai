@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Analyze Code - CodeSentinel-AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Geist:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-container": "#006970",
+                        "tertiary-fixed": "#ffdbce",
+                        "surface-container": "#201f1f",
+                        "on-tertiary": "#5a1b00",
+                        "secondary-fixed-dim": "#dcb8ff",
+                        "on-secondary-container": "#dcb7ff",
+                        "tertiary": "#fff3f0",
+                        "tertiary-container": "#ffcfbe",
+                        "surface-container-low": "#1c1b1b",
+                        "inverse-surface": "#e5e2e1",
+                        "surface-bright": "#393939",
+                        "surface": "#131313",
+                        "on-tertiary-container": "#a83a00",
+                        "error": "#ffb4ab",
+                        "on-primary": "#00363a",
+                        "outline": "#849495",
+                        "on-secondary": "#480081",
+                        "tertiary-fixed-dim": "#ffb59a",
+                        "primary-container": "#00f0ff",
+                        "secondary-container": "#7701d0",
+                        "on-primary-fixed": "#002022",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-secondary-fixed": "#2c0051",
+                        "secondary-fixed": "#efdbff",
+                        "background": "#131313",
+                        "on-tertiary-fixed": "#370e00",
+                        "on-error-container": "#ffdad6",
+                        "inverse-primary": "#006970",
+                        "on-error": "#690005",
+                        "on-tertiary-fixed-variant": "#802a00",
+                        "primary": "#dbfcff",
+                        "surface-tint": "#00dbe9",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-variant": "#353534",
+                        "on-surface": "#e5e2e1",
+                        "error-container": "#93000a",
+                        "surface-dim": "#131313",
+                        "inverse-on-surface": "#313030",
+                        "on-surface-variant": "#b9cacb",
+                        "surface-container-highest": "#353534",
+                        "primary-fixed": "#7df4ff",
+                        "outline-variant": "#3b494b",
+                        "primary-fixed-dim": "#00dbe9",
+                        "on-background": "#e5e2e1",
+                        "on-primary-fixed-variant": "#004f54",
+                        "on-secondary-fixed-variant": "#6700b5",
+                        "secondary": "#dcb8ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "container-max": "1440px",
+                        "gutter": "16px",
+                        "margin": "24px"
+                    },
+                    "fontFamily": {
+                        "code-md": ["JetBrains Mono"],
+                        "body-lg": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "label-sm": ["JetBrains Mono"],
+                        "body-md": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "headline-lg-mobile": ["Geist"]
+                    },
+                    "fontSize": {
+                        "code-md": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "34px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #050505; /* Level 0 Obsidian base */
+            color: theme('colors.on-background');
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid #222;
+        }
+
+        .glass-panel-darker {
+            background: rgba(10, 10, 10, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid #1a1a1a;
+        }
+
+        .ambient-glow {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(0,240,255,0.05) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/webgl-shader-element@0.1.0/dist/webgl-shader.min.js"></script>
+</head>
+<body class="font-body-md text-body-md antialiased overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- Atmospheric 3D Background -->
+<div class="fixed inset-0 pointer-events-none opacity-[0.15] mix-blend-screen z-0">
+</div>
+<!-- Background Ambient Glow -->
+<div class="ambient-glow top-0 left-1/4"></div>
+<div class="ambient-glow bottom-0 right-1/4 opacity-50"></div>
+<div class="flex h-screen relative z-10 w-full">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-screen w-[260px] bg-white/5 dark:bg-white/5 backdrop-blur-xl border-r border-white/10 shadow-none flex flex-col py-margin z-50">
+<div class="px-margin mb-8 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary-container/20 border border-primary-container/50 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">shield</span>
+</div>
+<div>
+<h1 class="font-headline-md text-[18px] leading-tight font-bold text-primary dark:text-primary tracking-tight">CodeSentinel-AI</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider opacity-70">AI-Driven Security</p>
+</div>
+</div>
+<div class="flex-1 flex flex-col gap-1 px-3">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary dark:text-primary font-bold border-r-2 border-primary bg-primary/10 shadow-[0_0_15px_rgba(0,240,255,0.2)] transition-transform duration-200 scale-95 origin-left" href="#">
+<span class="material-symbols-outlined">code</span>
+<span class="font-body-md">Analyze Code</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+<span class="font-body-md">Repository Analysis</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-body-md">History</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">security</span>
+<span class="font-body-md">Vulnerabilities</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-body-md">Reports</span>
+</a>
+</div>
+<div class="mt-auto px-3 border-t border-white/5 pt-4 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="font-body-md">Profile</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-[260px] h-screen flex flex-col relative">
+<!-- TopAppBar -->
+<header class="h-16 shrink-0 bg-white/5 dark:bg-white/5 backdrop-blur-xl border-b border-white/10 shadow-none flex justify-between items-center px-gutter z-40 sticky top-0">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-md text-[20px] font-bold text-on-surface dark:text-on-surface">Analyze Code</h2>
+</div>
+<div class="flex-1 max-w-md mx-8">
+<!-- Search bar on left logic, but moved to center-ish for balance -->
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary-container transition-colors">search</span>
+<input class="w-full bg-[#0A0A0A] border border-[#222] rounded-lg pl-10 pr-4 py-1.5 font-code-md text-code-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary-container focus:ring-0 transition-colors shadow-[inset_0_0_0_1px_rgba(0,0,0,0)] focus:shadow-[inset_0_0_4px_rgba(0,240,255,0.2)]" placeholder="Search resources..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-white/10 rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-white/10 rounded-full transition-colors">
+<span class="material-symbols-outlined">contrast</span>
+</button>
+<div class="w-8 h-8 rounded-full ml-2 border border-[#333] overflow-hidden cursor-pointer hover:border-primary-container transition-colors">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A futuristic, high-contrast digital avatar of a cybersecurity professional, set against a dark, minimalist background. The style is sleek, cybernetic, and glowing with subtle neon cyan accents. Professional, mysterious, and high-tech." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCd5359AEIzG8zsbWkt5lTAi7SW8lo-6Ut9td7cOcGEe-4HHrV5On6ZN3kcCOJDYyrJc-pe7Qmb9ATrhMYoTPxc8edGNo5WMgmjG59e-EEMJUgT3J8RSJpe4vzDu3zFefgdbrTqhpXJssckhYurQl5pYKgOcVo9kUEo0Rf5jJW_pWxdVO4A9k0KYb_h6q0XB7-mwJYfsaF_y6S7odvDUx2_bZVnPQzd4unUOh8x3NVW1yuxILja7qjpLA"/>
+</div>
+</div>
+</header>
+<!-- Scrollable Content Canvas -->
+<div class="flex-1 overflow-y-auto p-margin max-w-container-max mx-auto w-full">
+<!-- Page Header -->
+<div class="mb-8 flex justify-between items-end">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-2">Code Analysis Engine</h1>
+<p class="text-on-surface-variant font-body-lg text-body-lg max-w-2xl">Scan your source code for vulnerabilities with AI-powered analysis.</p>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 rounded bg-primary-container/10 border border-primary-container/20">
+<div class="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_rgba(0,240,255,0.8)] animate-pulse"></div>
+<span class="font-code-md text-code-md text-primary-container tracking-wide">Analysis Engine Ready</span>
+</div>
+</div>
+<!-- Main Layout Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-6 h-[calc(100%-120px)] min-h-[600px]">
+<!-- Left Column: Source Input & Config (4 cols) -->
+<div class="xl:col-span-4 flex flex-col gap-6">
+<!-- Source Input Panel -->
+<div class="glass-panel rounded-xl flex flex-col h-[300px]">
+<div class="p-4 border-b border-[#222] flex justify-between items-center shrink-0">
+<h3 class="font-headline-md text-[16px] font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">data_object</span>
+                                    Source Input
+                                </h3>
+</div>
+<div class="p-4 flex-1 flex flex-col gap-4">
+<!-- Source Selection -->
+<div class="flex p-1 bg-black/40 rounded-lg border border-[#222]">
+<button class="flex-1 py-1.5 text-sm font-medium rounded-md bg-white/10 text-on-surface shadow-sm">Paste Code</button>
+<button class="flex-1 py-1.5 text-sm font-medium rounded-md text-on-surface-variant hover:text-on-surface transition-colors">Upload File</button>
+</div>
+<!-- Language & Filename -->
+<div class="grid grid-cols-2 gap-4 mt-2">
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Language</label>
+<div class="relative">
+<select class="w-full bg-[#0A0A0A] border border-[#222] rounded text-on-surface py-2 pl-3 pr-8 appearance-none focus:outline-none focus:border-primary-container transition-colors font-code-md text-[13px]">
+<option>C++</option>
+<option>Python</option>
+<option>JavaScript</option>
+<option>Go</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">arrow_drop_down</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Filename</label>
+<input class="w-full bg-[#0A0A0A] border border-[#222] rounded text-on-surface py-2 px-3 focus:outline-none focus:border-primary-container transition-colors font-code-md text-[13px]" type="text" value="main.cpp"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Analysis Configuration Panel -->
+<div class="glass-panel rounded-xl flex flex-col flex-1">
+<div class="p-4 border-b border-[#222] flex justify-between items-center shrink-0">
+<h3 class="font-headline-md text-[16px] font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">settings_suggest</span>
+                                    Engine Config
+                                </h3>
+</div>
+<div class="p-4 flex flex-col gap-5">
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Detection Model</label>
+<div class="px-3 py-2 bg-black/40 border border-[#222] rounded text-on-surface font-code-md text-[13px] flex items-center justify-between">
+<span>CodeSentinel R-GCN</span>
+<span class="w-2 h-2 rounded-full bg-secondary-fixed"></span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Analysis Depth</label>
+<div class="relative">
+<select class="w-full bg-[#0A0A0A] border border-[#222] rounded text-on-surface py-2 pl-3 pr-8 appearance-none focus:outline-none focus:border-primary-container transition-colors font-code-md text-[13px]">
+<option>Standard (AST + Data Flow)</option>
+<option>Deep (Symbolic Execution)</option>
+<option>Quick (Pattern Matching)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">arrow_drop_down</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">AI Explainability</span>
+<button class="relative inline-flex h-5 w-9 items-center rounded-full bg-primary-container">
+<span class="translate-x-5 inline-block h-3 w-3 transform rounded-full bg-black transition"></span>
+</button>
+</div>
+<div class="flex flex-col gap-1.5 pt-2">
+<div class="flex justify-between items-center">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Confidence Threshold</label>
+<span class="font-code-md text-[12px] text-primary-container">0.70</span>
+</div>
+<input class="w-full h-1 bg-[#222] rounded-lg appearance-none cursor-pointer accent-primary-container" max="1" min="0" step="0.05" type="range" value="0.7"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Code Editor & Action (8 cols) -->
+<div class="xl:col-span-8 flex flex-col gap-6">
+<!-- IDE Code Editor -->
+<div class="rounded-xl flex flex-col flex-1 overflow-hidden relative backdrop-blur-3xl bg-[#0a0a0a]/60 border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] shadow-[0_0_40px_rgba(0,240,255,0.03)]">
+
+<!-- Editor Header -->
+<div class="p-3 border-b border-white/5 flex justify-between items-center bg-black/40 backdrop-blur-md z-10">
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-black/30 border border-white/10 backdrop-blur-sm">
+<span class="material-symbols-outlined text-[14px] text-secondary">terminal</span>
+<span class="font-code-md text-[12px] text-on-surface">main.cpp</span>
+</div>
+<span class="font-label-sm text-[10px] text-on-surface-variant px-2 py-0.5 rounded bg-white/5 uppercase backdrop-blur-sm">C++</span>
+</div>
+<div class="flex gap-2">
+<button class="px-2 py-1 flex items-center gap-1 text-[12px] font-medium text-on-surface-variant hover:text-primary-container rounded hover:bg-primary-container/10 transition-all hover:shadow-[0_0_10px_rgba(0,240,255,0.2)]">
+<span class="material-symbols-outlined text-[16px]">format_align_left</span>
+                                        Format
+                                    </button>
+<button class="px-2 py-1 flex items-center gap-1 text-[12px] font-medium text-on-surface-variant hover:text-primary-container rounded hover:bg-primary-container/10 transition-all hover:shadow-[0_0_10px_rgba(0,240,255,0.2)]">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+                                        Copy
+                                    </button>
+<button class="px-2 py-1 flex items-center gap-1 text-[12px] font-medium text-error/80 hover:text-error rounded hover:bg-error/10 transition-colors">
+<span class="material-symbols-outlined text-[16px]">delete_sweep</span>
+                                        Clear
+                                    </button>
+</div>
+</div>
+<!-- Editor Body -->
+<div class="flex-1 flex overflow-hidden relative group z-10">
+<!-- Line Numbers -->
+<div class="w-12 bg-black/30 border-r border-white/5 backdrop-blur-md flex flex-col items-end py-4 pr-3 font-code-md text-[14px] text-on-surface-variant/30 select-none">
+<span>1</span>
+<span>2</span>
+<span>3</span>
+<span>4</span>
+<span>5</span>
+<span>6</span>
+<span>7</span>
+</div>
+<!-- Code Area -->
+<div class="flex-1 p-4 overflow-auto font-code-md text-[14px] leading-relaxed text-[#e5e2e1] whitespace-pre cursor-text outline-none drop-shadow-md" contenteditable="true" spellcheck="false">
+<span class="text-[#7701d0]">#include</span> <span class="text-[#00f0ff]">&lt;cstring&gt;</span>
+<span class="text-secondary">void</span> <span class="text-[#00dbe9]">process</span>(<span class="text-secondary">char*</span> input) {
+    <span class="text-secondary">char</span> buffer[<span class="text-[#ffdbce]">64</span>];
+    <span class="text-[#00dbe9]">strcpy</span>(buffer, input);
+}
+                                </div>
+<!-- Focus indicator border -->
+<div class="absolute inset-0 border border-primary-container/0 group-focus-within:border-primary-container/30 pointer-events-none transition-colors"></div>
+</div>
+</div>
+<!-- Action Bar -->
+<div class="glass-panel rounded-xl p-4 flex items-center justify-between shrink-0">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant">memory</span>
+<span class="font-body-md text-on-surface-variant">Ready to process source file</span>
+</div>
+<button class="bg-primary-container text-black font-headline-md text-[16px] font-bold px-8 py-3 rounded hover:bg-[#7df4ff] transition-all duration-300 flex items-center gap-2 shadow-[0_0_15px_rgba(0,240,255,0.2)] hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] transform hover:-translate-y-0.5">
+<span class="material-symbols-outlined">troubleshoot</span>
+                                Analyze Code
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

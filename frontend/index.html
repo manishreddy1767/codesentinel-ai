@@ -1,0 +1,893 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>CodeSentinel-AI | Sign In</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;family=Geist:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "surface-container-low": "#1c1b1b",
+                "secondary-fixed-dim": "#dcb8ff",
+                "surface-bright": "#393939",
+                "outline-variant": "#3b494b",
+                "outline": "#849495",
+                "on-surface": "#e5e2e1",
+                "on-primary-container": "#006970",
+                "primary-fixed-dim": "#00dbe9",
+                "tertiary-fixed-dim": "#ffb59a",
+                "on-secondary": "#480081",
+                "on-tertiary-fixed-variant": "#802a00",
+                "primary-fixed": "#7df4ff",
+                "on-tertiary-fixed": "#370e00",
+                "surface": "#131313",
+                "surface-dim": "#131313",
+                "on-primary-fixed-variant": "#004f54",
+                "secondary-container": "#7701d0",
+                "error": "#ffb4ab",
+                "error-container": "#93000a",
+                "on-error-container": "#ffdad6",
+                "secondary-fixed": "#efdbff",
+                "primary-container": "#00f0ff",
+                "on-background": "#e5e2e1",
+                "tertiary-fixed": "#ffdbce",
+                "surface-container": "#201f1f",
+                "on-tertiary": "#5a1b00",
+                "on-secondary-fixed": "#2c0051",
+                "tertiary-container": "#ffcfbe",
+                "on-secondary-container": "#dcb7ff",
+                "on-surface-variant": "#b9cacb",
+                "surface-tint": "#00dbe9",
+                "inverse-surface": "#e5e2e1",
+                "on-primary": "#00363a",
+                "primary": "#dbfcff",
+                "on-error": "#690005",
+                "inverse-on-surface": "#313030",
+                "inverse-primary": "#006970",
+                "on-secondary-fixed-variant": "#6700b5",
+                "on-tertiary-container": "#a83a00",
+                "tertiary": "#fff3f0",
+                "surface-container-highest": "#353534",
+                "on-primary-fixed": "#002022",
+                "surface-container-high": "#2a2a2a",
+                "background": "#131313",
+                "surface-variant": "#353534",
+                "surface-container-lowest": "#0e0e0e",
+                "secondary": "#dcb8ff"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "container-max": "1440px",
+                "unit": "4px",
+                "gutter": "16px",
+                "margin": "24px"
+        },
+        "fontFamily": {
+                "headline-lg-mobile": [
+                        "Geist"
+                ],
+                "headline-md": [
+                        "Geist"
+                ],
+                "label-sm": [
+                        "JetBrains Mono"
+                ],
+                "headline-lg": [
+                        "Geist"
+                ],
+                "body-lg": [
+                        "Geist"
+                ],
+                "body-md": [
+                        "Geist"
+                ],
+                "code-md": [
+                        "JetBrains Mono"
+                ]
+        },
+        "fontSize": {
+                "headline-lg-mobile": [
+                        "28px",
+                        {
+                                "lineHeight": "34px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-sm": [
+                        "11px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg": [
+                        "40px",
+                        {
+                                "lineHeight": "48px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "body-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "code-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "500"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        body {
+            background-color: #131313;
+            color: #e5e2e1;
+            margin: 0;
+            overflow: hidden; 
+        }
+        
+        /* Right Side Atmospheric Background */
+        .right-bg {
+            background: radial-gradient(circle at 70% 30%, rgba(0, 240, 255, 0.03) 0%, transparent 50%),
+                        radial-gradient(circle at 30% 70%, rgba(20, 20, 25, 0.8) 0%, #0e0e0e 100%);
+        }
+        
+        /* Right side code traces and particles animation */
+        .code-traces {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 40px;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .particles {
+            position: absolute;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.15;
+            animation: drift 60s linear infinite;
+            z-index: 1;
+        }
+        
+        @keyframes drift {
+            0% { transform: translateY(0) }
+            100% { transform: translateY(-50px) }
+        }
+
+        /* Glass Panel */
+        .glass-panel {
+            background: rgba(20, 20, 25, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+        
+        .glass-mode .glass-panel {
+             background: rgba(20, 20, 25, 0.2);
+             backdrop-filter: blur(32px);
+             -webkit-backdrop-filter: blur(32px);
+        }
+
+        .btn-primary {
+            background-color: #00f0ff;
+            color: #050505;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #e5e2e1;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255,255,255,0.15);
+        }
+        .input-field {
+            background-color: rgba(10, 10, 12, 0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #e5e2e1;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+        }
+        .input-field:focus {
+            border-color: #00f0ff;
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.15), inset 0 0 0 1px rgba(0, 240, 255, 0.2);
+            outline: none;
+            background-color: rgba(15, 15, 20, 0.8);
+        }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 1s ease-out forwards;
+            opacity: 0;
+        }
+        .slide-up {
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #glcanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        #threejs-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+    </style>
+
+<style id="codesentinel-three-fix">
+  #threejs-container {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+  }
+
+  #threejs-container canvas {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+  }
+
+  #glcanvas {
+    z-index: 0 !important;
+  }
+</style>
+
+
+<style id="codesentinel-final-glass-fix">
+  /* --- CodeSentinel-AI glass authentication refinement --- */
+  .social-logo {
+    width: 20px !important;
+    height: 20px !important;
+    flex: 0 0 20px;
+    display: block;
+    opacity: 1 !important;
+  }
+
+  .github-logo {
+    color: #f2f2f2;
+  }
+
+  /* Give the whole right authentication zone a blurred atmospheric layer. */
+  .right-bg {
+    position: relative !important;
+    overflow: hidden !important;
+    background:
+      radial-gradient(circle at 78% 20%, rgba(0,240,255,.10), transparent 34%),
+      radial-gradient(circle at 15% 82%, rgba(95,70,150,.09), transparent 38%),
+      linear-gradient(135deg, rgba(18,20,23,.72), rgba(7,8,10,.88)) !important;
+    isolation: isolate;
+  }
+
+  .right-bg::before {
+    content: "";
+    position: absolute;
+    width: 360px;
+    height: 360px;
+    top: 5%;
+    right: -100px;
+    border-radius: 50%;
+    background: rgba(0,240,255,.055);
+    filter: blur(85px);
+    pointer-events: none;
+    z-index: 0;
+    animation: rightAmbientA 12s ease-in-out infinite alternate;
+  }
+
+  .right-bg::after {
+    content: "";
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    bottom: -70px;
+    left: -100px;
+    border-radius: 50%;
+    background: rgba(105,70,170,.055);
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    animation: rightAmbientB 15s ease-in-out infinite alternate;
+  }
+
+  @keyframes rightAmbientA {
+    from { transform: translate3d(0,0,0) scale(1); }
+    to   { transform: translate3d(-25px,20px,0) scale(1.08); }
+  }
+
+  @keyframes rightAmbientB {
+    from { transform: translate3d(0,0,0) scale(1); }
+    to   { transform: translate3d(22px,-18px,0) scale(1.1); }
+  }
+
+  /* The actual login card becomes a premium translucent/frosted surface. */
+  .glass-panel {
+    position: relative !important;
+    background: rgba(18, 21, 24, 0.30) !important;
+    backdrop-filter: blur(42px) saturate(135%) !important;
+    -webkit-backdrop-filter: blur(42px) saturate(135%) !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    box-shadow:
+      0 30px 80px rgba(0,0,0,.58),
+      inset 0 1px 0 rgba(255,255,255,.075),
+      inset 0 0 45px rgba(255,255,255,.018) !important;
+    overflow: hidden;
+    z-index: 10 !important;
+  }
+
+  .glass-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,.045), transparent 30%),
+      linear-gradient(315deg, rgba(0,240,255,.018), transparent 35%);
+    z-index: 0;
+  }
+
+  /* Keep every card child above the glass highlight. */
+  .glass-panel > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .input-field {
+    min-height: 52px !important;
+    border-radius: 12px !important;
+    background: rgba(5,8,11,.38) !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+    transition: border-color .28s ease, box-shadow .28s ease, background .28s ease !important;
+  }
+
+  .input-field:focus {
+    background: rgba(7,12,15,.52) !important;
+    border-color: rgba(0,240,255,.72) !important;
+    box-shadow:
+      0 0 20px rgba(0,240,255,.10),
+      inset 0 0 0 1px rgba(0,240,255,.18) !important;
+  }
+
+  /* Social buttons also receive a subtle glass treatment. */
+  .btn-secondary {
+    background: rgba(255,255,255,.035) !important;
+    border: 1px solid rgba(255,255,255,.09) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 12px !important;
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255,255,255,.065) !important;
+    border-color: rgba(0,240,255,.20) !important;
+  }
+
+  /* Ensure the right-side atmospheric decorations remain behind the card. */
+  .right-bg .code-traces,
+  .right-bg .particles {
+    z-index: 1 !important;
+  }
+</style>
+
+
+<style id="codesentinel-logo-fix">
+  .codesentinel-brand-mark {
+    width: 64px;
+    height: 64px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 64px;
+  }
+
+  .codesentinel-brand-mark svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  @media (max-width: 1023px) {
+    .codesentinel-brand-mark {
+      width: 48px;
+      height: 48px;
+      flex-basis: 48px;
+    }
+  }
+</style>
+
+</head>
+<body class="font-body-md text-body-md h-screen w-screen flex flex-col lg:flex-row antialiased">
+<!-- Left Side: Immersive Visual (60%) -->
+<div class="hidden lg:flex lg:w-[60%] relative bg-[#050505] overflow-hidden items-center justify-start p-16 xl:p-24">
+<!-- Atmospheric Shader Background -->
+<canvas id="glcanvas" width="768" height="1024"></canvas>
+<!-- Interactive 3D Core -->
+<div id="threejs-container"><canvas width="960" height="1280" style="display: block; width: 768px; height: 1024px;"></canvas></div>
+<!-- Content Overlay -->
+<div class="relative z-20 flex flex-col items-start max-w-xl w-full h-full justify-between slide-up">
+<div>
+<div class="mb-12 flex items-center gap-4">
+<span class="codesentinel-brand-mark" aria-label="CodeSentinel-AI"><svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" xmlns:c2pa="http://c2pa.org/manifest"><metadata><c2pa:manifest>AAAgRWp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAAAxBanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYTowZTYyZWJkNi0xZWY0LTQzYzktOGIxNi1lNTA0OTY4NGU4NmMAAAAB4mp1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAAO1qdW1iAAAAQWp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuYWN0aW9ucy52MgAAAAAYYzJzaCOUnQFuEVUucwjaKpbahAYAAACkY2JvcqFnYWN0aW9uc4GjZmFjdGlvbmxjMnBhLmNyZWF0ZWRxZGlnaXRhbFNvdXJjZVR5cGV4Rmh0dHA6Ly9jdi5pcHRjLm9yZy9uZXdzY29kZXMvZGlnaXRhbHNvdXJjZXR5cGUvdHJhaW5lZEFsZ29yaXRobWljTWVkaWFrZGVzY3JpcHRpb252Q3JlYXRlZCBieSBSZWNyYWZ0IEFJLgAAAMRqdW1iAAAAQGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaGFzaC5kYXRhAAAAABhjMnNoxPoW9EW5xc0FgFHsPADllgAAAHxjYm9ypWpleGNsdXNpb25zgaJlc3RhcnQY22ZsZW5ndGgZEIxkbmFtZW5qdW1iZiBtYW5pZmVzdGNhbGdmc2hhMjU2ZGhhc2hYIMpL+X2aD1TIf+K8ub43EdrIfmJOmG71+DfWNZMADB0uY3BhZEkAAAAAAAAAAAAAAAI0anVtYgAAACdqdW1kYzJjbAARABCAAACqADibcQNjMnBhLmNsYWltLnYyAAAAAgVjYm9ypmppbnN0YW5jZUlEeCx4bXA6aWlkOjgyZTFjODBkLTAzMGEtNDJmOC1hOWE3LTg0MGQ0NjE5Y2I5ZnRjbGFpbV9nZW5lcmF0b3JfaW5mb6NkbmFtZWpyZWNyYWZ0LmFpZ3ZlcnNpb254KDgxY2U4MmUyYzVjM2NiZmJlOGM2ZmJlMTc5ZDVmOGQ5MWM0MDljZTF3b3JnLmNvbnRlbnRhdXRoLmMycGFfcnNmMC45MC43aXNpZ25hdHVyZXhNc2VsZiNqdW1iZj0vYzJwYS91cm46YzJwYTowZTYyZWJkNi0xZWY0LTQzYzktOGIxNi1lNTA0OTY4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YzJwYS5zaWduYXR1cmVrZXhwbGFuYXRpb251Y2xhaW0gc2lnbmF0dXJlIHZhbGlko2Rjb2RleBhjbGFpbVNpZ25hdHVyZS52YWxpZGF0ZWRjdXJseE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOjBlNjJlYmQ2LTFlZjQtNDNjOS04YjE2LWU1MDQ5Njg0ZTg2Yy9jMnBhLnNpZ25hdHVyZWtleHBsYW5hdGlvbnVjbGFpbSBzaWduYXR1cmUgdmFsaWSjZGNvZGV4GWFzc2VydGlvbi5oYXNoZWRVUkkubWF0Y2hjdXJseF5zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOjBlNjJlYmQ2LTFlZjQtNDNjOS04YjE2LWU1MDQ5Njg0ZTg2Yy9jMnBhLmFzc2VydGlvbnMvYzJwYS5hY3Rpb25zLnYya2V4cGxhbmF0aW9ueD5oYXNoZWQgdXJpIG1hdGNoZWQ6IHNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuYWN0aW9ucy52MqNkY29kZXgZYXNzZXJ0aW9uLmhhc2hlZFVSSS5tYXRjaGN1cmx4XXNlbGYjanVtYmY9L2MycGEvdXJuOmMycGE6MGU2MmViZDYtMWVmNC00M2M5LThiMTYtZTUwNDk2ODRlODZjL2MycGEuYXNzZXJ0aW9ucy9jMnBhLmhhc2guZGF0YWtleHBsYW5hdGlvbng9aGFzaGVkIHVyaSBtYXRjaGVkOiBzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmhhc2guZGF0YaNkY29kZXgYYXNzZXJ0aW9uLmRhdGFIYXNoLm1hdGNoY3VybHhdc2VsZiNqdW1iZj0vYzJwYS91cm46YzJwYTowZTYyZWJkNi0xZWY0LTQzYzktOGIxNi1lNTA0OTY4NGU4NmMvYzJwYS5hc3NlcnRpb25zL2MycGEuaGFzaC5kYXRha2V4cGxhbmF0aW9ub2RhdGEgaGFzaCB2YWxpZG1pbmZvcm1hdGlvbmFsgGdmYWlsdXJlgaNkY29kZXgbc2lnbmluZ0NyZWRlbnRpYWwudW50cnVzdGVkY3VybHhNc2VsZiNqdW1iZj0vYzJwYS91cm46YzJwYTowZTYyZWJkNi0xZWY0LTQzYzktOGIxNi1lNTA0OTY4NGU4NmMvYzJwYS5zaWduYXR1cmVrZXhwbGFuYXRpb254HXNpZ25pbmcgY2VydGlmaWNhdGUgdW50cnVzdGVkamluc3RhbmNlSUR4LHhtcDppaWQ6ZmNjZDY3ZTAtYmNmOS00MzExLWE3MzQtNzEyOGJmYmE1NmNibmFjdGl2ZU1hbmlmZXN0o2N1cmx4PnNlbGYjanVtYmY9L2MycGEvdXJuOmMycGE6MGU2MmViZDYtMWVmNC00M2M5LThiMTYtZTUwNDk2ODRlODZjY2FsZ2ZzaGEyNTZkaGFzaFgg8HW0h+70xOQ6UHafXA3gpafEWtBJ50DTSGid5pPaS4duY2xhaW1TaWduYXR1cmWjY3VybHhNc2VsZiNqdW1iZj0vYzJwYS91cm46YzJwYTowZTYyZWJkNi0xZWY0LTQzYzktOGIxNi1lNTA0OTY4NGU4NmMvYzJwYS5zaWduYXR1cmVjYWxnZnNoYTI1NmRoYXNoWCDuB4/dZA2KFv84+6ZyLjJeINI773HLnqAVh9+SIVl/jgAAAe5qdW1iAAAAQWp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuYWN0aW9ucy52MgAAAAAYYzJzaAxEXQdztnSRR1JQwemN4xwAAAGlY2JvcqFnYWN0aW9uc4KiZmFjdGlvbmtjMnBhLm9wZW5lZGpwYXJhbWV0ZXJzoWtpbmdyZWRpZW50c4GiY3VybHgtc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5pbmdyZWRpZW50LnYzZGhhc2hYICizKYKI2dfhdw2yePgfAdtwYshCsKq2X+7Ws/x8K56dpGZhY3Rpb25sYzJwYS5jcmVhdGVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggKLMpgojZ1+F3DbJ4+B8B23BiyEKwqrZf7taz/Hwrnp1xZGlnaXRhbFNvdXJjZVR5cGV4QWh0dHA6Ly9jdi5pcHRjLm9yZy9uZXdzY29kZXMvZGlnaXRhbHNvdXJjZXR5cGUvY29tcG9zaXRlU3ludGhldGlja2Rlc2NyaXB0aW9ueB9Db21wb3NlZCBpbiB0aGUgUmVjcmFmdCBlZGl0b3IuAAAAxGp1bWIAAABAanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5oYXNoLmRhdGEAAAAAGGMyc2huezsqx4ylLg7Xm/kgZuIlAAAAfGNib3KlamV4Y2x1c2lvbnOBomVzdGFydBiaZmxlbmd0aBkrCGRuYW1lbmp1bWJmIG1hbmlmZXN0Y2FsZ2ZzaGEyNTZkaGFzaFggndb6aQtCLUYGt+9nxyskriAdhcQ0p0mo417NHPFAaYtjcGFkSQAAAAAAAAAAAAAAApZqdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACZ2Nib3Knamluc3RhbmNlSUR4LHhtcDppaWQ6ZGFiZThjNzEtMzMwMy00N2FhLWJkOTQtMGFhMWJjOTQxN2U3dGNsYWltX2dlbmVyYXRvcl9pbmZvo2RuYW1lanJlY3JhZnQuYWlndmVyc2lvbngoODFjZTgyZTJjNWMzY2JmYmU4YzZmYmUxNzlkNWY4ZDkxYzQwOWNlMXdvcmcuY29udGVudGF1dGguYzJwYV9yc2YwLjkwLjdpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOjNjZWYyNTNmLWVjNzktNGE0Mi1hMDRmLTQ5NDU4NzU4NWE1OC9jMnBhLnNpZ25hdHVyZXJjcmVhdGVkX2Fzc2VydGlvbnOComN1cmx4KnNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuYWN0aW9ucy52MmRoYXNoWCDR6kW6kCpS/qZADloyfGlcxryOT4D/u55+4PHa5Ru3FaJjdXJseClzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmhhc2guZGF0YWRoYXNoWCD5+8trrkjukB/LUYwAux1dNXCFcWI6V+zI/HL7J3KX1HNnYXRoZXJlZF9hc3NlcnRpb25zgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggKLMpgojZ1+F3DbJ4+B8B23BiyEKwqrZf7taz/Hwrnp1oZGM6dGl0bGVtUmVjcmFmdCBJbWFnZWNhbGdmc2hhMjU2AAAH3Gp1bWIAAAAoanVtZGMyY3MAEQAQgAAAqgA4m3EDYzJwYS5zaWduYXR1cmUAAAAH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</c2pa:manifest></metadata><path fill="#0a0e14" d="M0 0h1024v1024H0z"/><path fill="#0ff0dc" d="M512.292 287.935c3.707 1.467 16.9 9.323 20.73 11.506l42.107 23.992a6544 6544 0 0 1 87.188 49.568c14.623 8.289 32.62 17.416 46.479 27.22.989.7 1.071 7.849 1.074 9.442.081 37.658-.174 75.319-.201 112.977l-.005 64.043c0 11.714.24 24.488-.153 36.128-5.246 4.434-18.632 11.515-25.346 15.361l-52.186 29.618-80.232 45.774c-8.08 4.636-32.689 19.578-39.936 21.902-3.533-1.209-13.539-7.372-17.56-9.68l-33.256-18.864-96.003-54.505c-8.884-5.042-44.682-23.738-49.977-29.098-.74-6.663-.247-26.474-.254-34.067l-.118-69.739-.009-78.879c.004-8.735-.492-32.957.734-40.544 5.351-4.662 30.319-18.155 37.934-22.447a7474 7474 0 0 1 75.275-42.594l56.139-32.002c7.443-4.208 20.128-11.876 27.576-15.112"/><path fill="#0a0e14" d="m507.1 300.977.64.6-.241 122.526 9.494.045q.193-61.58-.41-123.157c21.549 11.724 43.407 24.46 64.816 36.54l119.509 68.105-.276 139.007c.008 22.707-.263 46.399.36 69.054-7.964-5.32-22.674-13.112-31.513-18.202-29.318-16.886-58.932-33.223-88.031-50.541-2.133 2.857-3.623 5.096-5.527 8.117a4525 4525 0 0 1 78.652 44.533c13.399 7.629 28.326 15.473 41.238 23.51-5.708 2.742-14.642 8.274-20.39 11.551a4181 4181 0 0 0-38.587 21.956 12979 12979 0 0 1-113.596 64.412c-2.338 1.244-4.456 2.767-6.649 4.256.694-9.733.21-27.822.231-37.903l-.209-80.33-9.12-.022-.102 117.992c-9.467-6.54-30.924-17.552-41.982-23.903l-93.744-53.604c-11.355-6.383-33.763-18.087-43.332-24.943 16.156-8.216 30.459-16.828 46.101-25.776 24.231-13.863 48.582-28.336 73.177-41.478l-5.045-7.992c-12.28 6.74-24.473 14.074-36.701 20.988l-82.392 46.66.042-207.654c23.919-13.138 48.413-27.709 72.148-41.275z"/><path fill="#0a5a98" d="M518.207 438.785c2.049 1.439 15.829 15.996 18.76 18.863l57.402 56.506c-12.5 11.977-24.877 24.56-37.315 36.696-12.537 12.53-26.081 26.838-38.986 38.652l-.189-99.966.067-31.985c.008-5.438-.197-13.547.261-18.766"/><path fill="#0ff0dc" d="M505.344 439.92c1.518 2.466.722 131.179.792 149.543-11.382-10.167-26.835-26.616-37.804-37.813a5013 5013 0 0 0-38.228-37.264c5.775-6.437 17.664-17.451 24.175-23.926z"/></svg></span>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter">CodeSentinel-AI</h1>
+</div>
+</div>
+<div class="space-y-6 pb-12">
+<h2 class="font-headline-lg text-[64px] leading-[1.1] text-on-background font-bold tracking-tight">
+            Secure.<br>
+            Analyze.<br>
+            Defend.
+        </h2>
+<p class="font-body-lg text-xl text-on-surface-variant max-w-lg opacity-90 leading-relaxed">
+            AI-powered source-code security for the modern developer ecosystem.
+        </p>
+</div>
+</div>
+</div>
+<!-- Right Side: Login Panel (40%) -->
+<div class="flex-1 lg:w-[40%] right-bg relative flex flex-col justify-center items-center p-6 md:p-12 z-20 overflow-hidden glass-mode">
+<!-- Atmospheric Background Elements -->
+<div class="code-traces"></div>
+<div class="particles"></div>
+<!-- Theme Toggle -->
+<button class="absolute top-8 right-8 text-on-surface-variant hover:text-primary transition-colors z-50">
+<span class="material-symbols-outlined text-2xl">light_mode</span>
+</button>
+<div class="w-full max-w-[480px] relative z-10 fade-in delay-200">
+<!-- Mobile Brand Header (Visible only on mobile/tablet) -->
+<div class="lg:hidden flex items-center gap-3 mb-10 justify-center">
+<span class="codesentinel-brand-mark" aria-label="CodeSentinel-AI"><svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" xmlns:c2pa="http://c2pa.org/manifest"><metadata><c2pa:manifest>AAAgRWp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAAAxBanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYTowZTYyZWJkNi0xZWY0LTQzYzktOGIxNi1lNTA0OTY4NGU4NmMAAAAB4mp1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAAO1qdW1iAAAAQWp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuYWN0aW9ucy52MgAAAAAYYzJzaCOUnQFuEVUucwjaKpbahAYAAACkY2JvcqFnYWN0aW9uc4GjZmFjdGlvbmxjMnBhLmNyZWF0ZWRxZGlnaXRhbFNvdXJjZVR5cGV4Rmh0dHA6Ly9jdi5pcHRjLm9yZy9uZXdzY29kZXMvZGlnaXRhbHNvdXJjZXR5cGUvdHJhaW5lZEFsZ29yaXRobWljTWVkaWFrZGVzY3JpcHRpb252Q3JlYXRlZCBieSBSZWNyYWZ0IEFJLgAAAMRqdW1iAAAAQGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaGFzaC5kYXRhAAAAABhjMnNoxPoW9EW5xc0FgFHsPADllgAAAHxjYm9ypWpleGNsdXNpb25zgaJlc3RhcnQY22ZsZW5ndGgZEIxkbmFtZW5qdW1iZiBtYW5pZmVzdGNhbGdmc2hhMjU2ZGhhc2hYIMpL+X2aD1TIf+K8ub43EdrIfmJOmG71+DfWNZMADB0uY3BhZEkAAAAAAAAAAAAAAAI0anVtYgAAACdqdW1kYzJjbAARABCAAACqADibcQNjMnBhLmNsYWltLnYyAAAAAgVjYm9ypmppbnN0YW5jZUlEeCx4bXA6aWlkOjgyZTFjODBkLTAzMGEtNDJmOC1hOWE3LTg0MGQ0NjE5Y2I5ZnRjbGFpbV9nZW5lcmF0b3JfaW5mb6NkbmFtZWpyZWNyYWZ0LmFpZ3ZlcnNpb254KDgxY2U4MmUyYzVjM2NiZmJlOGM2ZmJlMTc5ZDVmOGQ5MWM0MDljZTF3b3JnLmNvbnRlbnRhdXRoLmMycGFfcnNmMC45MC43aXNpZ25hdHVyZXhNc2VsZiNqdW1iZj0vYzJwYS91cm46YzJwYTowZTYyZWJkNi0xZWY0LTQzYzktOGIxNi1lNTA0OTY4NGU4NmMvYzJwYS5zaWduYXR1cmVyY3JlYXRlZF9hc3NlcnRpb25zgqJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFgggdUIUZAqfBwkVHy/MMUoZzg7gdkK6SGxvnkhqq96Y+yiY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFgg2Xqy4qa2NwfcgrFhHe5m3uenijVeoSIShsArALTGVO9oZGM6dGl0bGV4GlJlY3JhZnQgQUkgR2VuZXJhdGVkIEltYWdlY2FsZ2ZzaGEyNTYAAAfcanVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAAAesY2JvctKEWQOwogEmGCGCWQHnMIIB4zCCAYmgAwIBAgIJALfeWmNDUW56MAoGCCqGSM49BAMCMEAxHzAdBgNVBAMMFlJlY3JhZnQgU3RhZ2luZyBEZXYgQ0ExEDAOBgNVBAoMB1JlY3JhZnQxCzAJBgNVBAYTAlVTMB4XDTI2MDYxMjE5NDM1MFoXDTI3MDYxMjE5NDM1MFowNzELMAkGA1UEBhMCVVMxEzARBgNVBAoTClJlY3JhZnQgQUkxEzARBgNVBAMTCnJlY3JhZnQuYWkwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAARKaTVbACsg/DeG3LeOxYdID/VA6EFG73E6Oknb+KIiCFJygRUz4ueN2z/t2qYb6CIUvS8RvgOiiClfoqsYtw81o3UwczAMBgNVHRMBAf8EAjAAMA4GA1UdDwEB/wQEAwIGwDATBgNVHSUEDDAKBggrBgEFBQcDBDAdBgNVHQ4EFgQULzHpBen96SL1y4IPHa8MkMshXf0wHwYDVR0jBBgwFoAUAgsqOBrKqpdK//m/kxZo7ZR4ebcwCgYIKoZIzj0EAwIDSAAwRQIgU8hKW0aXvvk8SQgVFNkax69Ym9ae8GsT2RZTQw+B51ACIQC0D4BkEoRD4N0r2ZRkNy0HZaW3WICy/QZGN95ilF4yzFkBvTCCAbkwggFfoAMCAQICCQCc+Wg7T6ATbzAKBggqhkjOPQQDAjBAMR8wHQYDVQQDDBZSZWNyYWZ0IFN0YWdpbmcgRGV2IENBMRAwDgYDVQQKDAdSZWNyYWZ0MQswCQYDVQQGEwJVUzAeFw0yNjA2MTIxOTQwMTZaFw0yODA2MTExOTQwMTZaMEAxHzAdBgNVBAMMFlJlY3JhZnQgU3RhZ2luZyBEZXYgQ0ExEDAOBgNVBAoMB1JlY3JhZnQxCzAJBgNVBAYTAlVTMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEQ9IQBlcVbKaKPYrQSfOhL/00s7xUDC7RinIuLO/I1k99y9yh6oWF9kPxaP+tx1v1PeOL3yrVquJ730H0ZGiDyqNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAYYwHQYDVR0OBBYEFAILKjgayqqXSv/5v5MWaO2UeHm3MAoGCCqGSM49BAMCA0gAMEUCIFQwNImLlYDeQhjgF+ZiqTbgcuzSqmOJw3Q2lQ/hu83FAiEA9O8cLm/xfoVLqB4jtdbuHzi3WL+p2RN+DRGkwpYswVuhY3BhZFkDpAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA9lhAlmh7Z/jLNZ47Qqog7yQ1CSU52eOcpq8HPwDfvCWsqQv7pxyITsavgpNgFcdJd1Icygvd+LRumsXko4FYmgQE9AAAE95qdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjNjZWYyNTNmLWVjNzktNGE0Mi1hMDRmLTQ5NDU4NzU4NWE1OAAAAAkdanVtYgAAAClqdW1kYzJhcwARABCAAACqADibcQNjMnBhLmFzc2VydGlvbnMAAAAGOmp1bWIAAABEanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5pbmdyZWRpZW50LnYzAAAAABhjMnNoJMNRMNkxBxgf/a9quJo4HwAABe5jYm9yp2xyZWxhdGlvbnNoaXBocGFyZW50T2ZoZGM6dGl0bGVmc291cmNlaWRjOmZvcm1hdG1pbWFnZS9zdmcreG1scXZhbGlkYXRpb25SZXN1bHRzoW5hY3RpdmVNYW5pZmVzdKNnc3VjY2Vzc4WjZGNvZGV4HWNsYWltU2lnbmF0dXJlLmluc2lkZVZhbGlkaXR5Y3VybHhNc2VsZiNqdW1iZj0vYzJwYS91cm46YzJwYTowZTYyZWJkNi0xZWY0LTQzYzktOGIxNi1lNTA0OTY4NGU4NmMvYzJwYS5zaWduYXR1cmVrZXhwbGFuYXRpb251Y2xhaW0gc2lnbmF0dXJlIHZhbGlko2Rjb2RleBhjbGFpbVNpZ25hdHVyZS52YWxpZGF0ZWRjdXJseE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOjBlNjJlYmQ2LTFlZjQtNDNjOS04YjE2LWU1MDQ5Njg0ZTg2Yy9jMnBhLnNpZ25hdHVyZWtleHBsYW5hdGlvbnVjbGFpbSBzaWduYXR1cmUgdmFsaWSjZGNvZGV4GWFzc2VydGlvbi5oYXNoZWRVUkkubWF0Y2hjdXJseF5zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOjBlNjJlYmQ2LTFlZjQtNDNjOS04YjE2LWU1MDQ5Njg0ZTg2Yy9jMnBhLmFzc2VydGlvbnMvYzJwYS5hY3Rpb25zLnYya2V4cGxhbmF0aW9ueD5oYXNoZWQgdXJpIG1hdGNoZWQ6IHNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuYWN0aW9ucy52MqNkY29kZXgZYXNzZXJ0aW9uLmhhc2hlZFVSSS5tYXRjaGN1cmx4XXNlbGYjanVtYmY9L2MycGEvdXJuOmMycGE6MGU2MmViZDYtMWVmNC00M2M5LThiMTYtZTUwNDk2ODRlODZjL2MycGEuYXNzZXJ0aW9ucy9jMnBhLmhhc2guZGF0YWtleHBsYW5hdGlvbng9aGFzaGVkIHVyaSBtYXRjaGVkOiBzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmhhc2guZGF0YaNkY29kZXgYYXNzZXJ0aW9uLmRhdGFIYXNoLm1hdGNoY3VybHhdc2VsZiNqdW1iZj0vYzJwYS91cm46YzJwYTowZTYyZWJkNi0xZWY0LTQzYzktOGIxNi1lNTA0OTY4NGU4NmMvYzJwYS5hc3NlcnRpb25zL2MycGEuaGFzaC5kYXRha2V4cGxhbmF0aW9ub2RhdGEgaGFzaCB2YWxpZG1pbmZvcm1hdGlvbmFsgGdmYWlsdXJlgaNkY29kZXgbc2lnbmluZ0NyZWRlbnRpYWwudW50cnVzdGVkY3VybHhNc2VsZiNqdW1iZj0vYzJwYS91cm46YzJwYTowZTYyZWJkNi0xZWY0LTQzYzktOGIxNi1lNTA0OTY4NGU4NmMvYzJwYS5zaWduYXR1cmVrZXhwbGFuYXRpb254HXNpZ25pbmcgY2VydGlmaWNhdGUgdW50cnVzdGVkamluc3RhbmNlSUR4LHhtcDppaWQ6ZmNjZDY3ZTAtYmNmOS00MzExLWE3MzQtNzEyOGJmYmE1NmNibmFjdGl2ZU1hbmlmZXN0o2N1cmx4PnNlbGYjanVtYmY9L2MycGEvdXJuOmMycGE6MGU2MmViZDYtMWVmNC00M2M5LThiMTYtZTUwNDk2ODRlODZjY2FsZ2ZzaGEyNTZkaGFzaFgg8HW0h+70xOQ6UHafXA3gpafEWtBJ50DTSGid5pPaS4duY2xhaW1TaWduYXR1cmWjY3VybHhNc2VsZiNqdW1iZj0vYzJwYS91cm46YzJwYTowZTYyZWJkNi0xZWY0LTQzYzktOGIxNi1lNTA0OTY4NGU4NmMvYzJwYS5zaWduYXR1cmVjYWxnZnNoYTI1NmRoYXNoWCDuB4/dZA2KFv84+6ZyLjJeINI773HLnqAVh9+SIVl/jgAAAe5qdW1iAAAAQWp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuYWN0aW9ucy52MgAAAAAYYzJzaAxEXQdztnSRR1JQwemN4xwAAAGlY2JvcqFnYWN0aW9uc4KiZmFjdGlvbmtjMnBhLm9wZW5lZGpwYXJhbWV0ZXJzoWtpbmdyZWRpZW50c4GiY3VybHgtc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5pbmdyZWRpZW50LnYzZGhhc2hYICizKYKI2dfhdw2yePgfAdtwYshCsKq2X+7Ws/x8K56dpGZhY3Rpb25sYzJwYS5jcmVhdGVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggKLMpgojZ1+F3DbJ4+B8B23BiyEKwqrZf7taz/Hwrnp1xZGlnaXRhbFNvdXJjZVR5cGV4QWh0dHA6Ly9jdi5pcHRjLm9yZy9uZXdzY29kZXMvZGlnaXRhbHNvdXJjZXR5cGUvY29tcG9zaXRlU3ludGhldGlja2Rlc2NyaXB0aW9ueB9Db21wb3NlZCBpbiB0aGUgUmVjcmFmdCBlZGl0b3IuAAAAxGp1bWIAAABAanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5oYXNoLmRhdGEAAAAAGGMyc2huezsqx4ylLg7Xm/kgZuIlAAAAfGNib3KlamV4Y2x1c2lvbnOBomVzdGFydBiaZmxlbmd0aBkrCGRuYW1lbmp1bWJmIG1hbmlmZXN0Y2FsZ2ZzaGEyNTZkaGFzaFggndb6aQtCLUYGt+9nxyskriAdhcQ0p0mo417NHPFAaYtjcGFkSQAAAAAAAAAAAAAAApZqdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACZ2Nib3Knamluc3RhbmNlSUR4LHhtcDppaWQ6ZGFiZThjNzEtMzMwMy00N2FhLWJkOTQtMGFhMWJjOTQxN2U3dGNsYWltX2dlbmVyYXRvcl9pbmZvo2RuYW1lanJlY3JhZnQuYWlndmVyc2lvbngoODFjZTgyZTJjNWMzY2JmYmU4YzZmYmUxNzlkNWY4ZDkxYzQwOWNlMXdvcmcuY29udGVudGF1dGguYzJwYV9yc2YwLjkwLjdpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOjNjZWYyNTNmLWVjNzktNGE0Mi1hMDRmLTQ5NDU4NzU4NWE1OC9jMnBhLnNpZ25hdHVyZXJjcmVhdGVkX2Fzc2VydGlvbnOComN1cmx4KnNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuYWN0aW9ucy52MmRoYXNoWCDR6kW6kCpS/qZADloyfGlcxryOT4D/u55+4PHa5Ru3FaJjdXJseClzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmhhc2guZGF0YWRoYXNoWCD5+8trrkjukB/LUYwAux1dNXCFcWI6V+zI/HL7J3KX1HNnYXRoZXJlZF9hc3NlcnRpb25zgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggKLMpgojZ1+F3DbJ4+B8B23BiyEKwqrZf7taz/Hwrnp1oZGM6dGl0bGVtUmVjcmFmdCBJbWFnZWNhbGdmc2hhMjU2AAAH3Gp1bWIAAAAoanVtZGMyY3MAEQAQgAAAqgA4m3EDYzJwYS5zaWduYXR1cmUAAAAH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</c2pa:manifest></metadata><path fill="#0a0e14" d="M0 0h1024v1024H0z"/><path fill="#0ff0dc" d="M512.292 287.935c3.707 1.467 16.9 9.323 20.73 11.506l42.107 23.992a6544 6544 0 0 1 87.188 49.568c14.623 8.289 32.62 17.416 46.479 27.22.989.7 1.071 7.849 1.074 9.442.081 37.658-.174 75.319-.201 112.977l-.005 64.043c0 11.714.24 24.488-.153 36.128-5.246 4.434-18.632 11.515-25.346 15.361l-52.186 29.618-80.232 45.774c-8.08 4.636-32.689 19.578-39.936 21.902-3.533-1.209-13.539-7.372-17.56-9.68l-33.256-18.864-96.003-54.505c-8.884-5.042-44.682-23.738-49.977-29.098-.74-6.663-.247-26.474-.254-34.067l-.118-69.739-.009-78.879c.004-8.735-.492-32.957.734-40.544 5.351-4.662 30.319-18.155 37.934-22.447a7474 7474 0 0 1 75.275-42.594l56.139-32.002c7.443-4.208 20.128-11.876 27.576-15.112"/><path fill="#0a0e14" d="m507.1 300.977.64.6-.241 122.526 9.494.045q.193-61.58-.41-123.157c21.549 11.724 43.407 24.46 64.816 36.54l119.509 68.105-.276 139.007c.008 22.707-.263 46.399.36 69.054-7.964-5.32-22.674-13.112-31.513-18.202-29.318-16.886-58.932-33.223-88.031-50.541-2.133 2.857-3.623 5.096-5.527 8.117a4525 4525 0 0 1 78.652 44.533c13.399 7.629 28.326 15.473 41.238 23.51-5.708 2.742-14.642 8.274-20.39 11.551a4181 4181 0 0 0-38.587 21.956 12979 12979 0 0 1-113.596 64.412c-2.338 1.244-4.456 2.767-6.649 4.256.694-9.733.21-27.822.231-37.903l-.209-80.33-9.12-.022-.102 117.992c-9.467-6.54-30.924-17.552-41.982-23.903l-93.744-53.604c-11.355-6.383-33.763-18.087-43.332-24.943 16.156-8.216 30.459-16.828 46.101-25.776 24.231-13.863 48.582-28.336 73.177-41.478l-5.045-7.992c-12.28 6.74-24.473 14.074-36.701 20.988l-82.392 46.66.042-207.654c23.919-13.138 48.413-27.709 72.148-41.275z"/><path fill="#0a5a98" d="M518.207 438.785c2.049 1.439 15.829 15.996 18.76 18.863l57.402 56.506c-12.5 11.977-24.877 24.56-37.315 36.696-12.537 12.53-26.081 26.838-38.986 38.652l-.189-99.966.067-31.985c.008-5.438-.197-13.547.261-18.766"/><path fill="#0ff0dc" d="M505.344 439.92c1.518 2.466.722 131.179.792 149.543-11.382-10.167-26.835-26.616-37.804-37.813a5013 5013 0 0 0-38.228-37.264c5.775-6.437 17.664-17.451 24.175-23.926z"/></svg></span>
+<h1 class="font-headline-md text-headline-md text-primary tracking-tight">CodeSentinel-AI</h1>
+</div>
+<!-- Login Glass Panel -->
+<div class="glass-panel rounded-2xl p-8 md:p-12 w-full relative" style="backdrop-filter: blur(48px);">
+<div class="mb-10 text-center">
+<h2 class="font-headline-md text-3xl text-on-background mb-3 tracking-tight">Welcome back</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Sign in to continue your secure code analysis.</p>
+</div>
+<form class="space-y-6">
+<div class="space-y-2">
+<label class="block font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" for="email">Email address</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px]">mail</span>
+<input class="input-field w-full pl-12 pr-4 py-4 font-body-md text-body-md placeholder:text-surface-variant focus:ring-0 bg-black/40" id="email" placeholder="name@company.com" required="" type="email">
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="block font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" for="password">Password</label>
+<a class="font-label-sm text-label-sm text-primary hover:text-primary-fixed transition-colors" href="#">Forgot password?</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px]">lock</span>
+<input class="input-field w-full pl-12 pr-12 py-4 font-body-md text-body-md placeholder:text-surface-variant focus:ring-0 bg-black/40" id="password" placeholder="••••••••••••" required="" type="password">
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">visibility_off</span>
+</button>
+</div>
+</div>
+<div class="flex items-center">
+<input class="w-4 h-4 rounded border-outline-variant bg-surface-container text-primary focus:ring-primary focus:ring-offset-surface-container-lowest" id="remember-me" type="checkbox">
+<label class="ml-2 block text-sm text-on-surface-variant" for="remember-me">
+                    Remember me for 30 days
+                </label>
+</div>
+<div class="pt-4 flex flex-col gap-5">
+<button class="btn-primary w-full rounded-xl py-4 font-label-sm text-label-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2" type="submit">
+<span class="">Initialize Session</span>
+<span class="material-symbols-outlined text-[18px]">login</span>
+</button>
+<div class="relative flex items-center py-2">
+<div class="flex-grow border-t border-white/10"></div>
+<span class="flex-shrink-0 mx-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">or</span>
+<div class="flex-grow border-t border-white/10"></div>
+</div>
+<button class="btn-secondary w-full rounded-xl py-3.5 font-label-sm text-label-sm uppercase tracking-wider flex items-center justify-center gap-3" type="button">
+<svg class="social-logo" viewBox="0 0 24 24" aria-hidden="true">
+<path fill="#4285F4" d="M21.35 12.27c0-.73-.07-1.43-.2-2.1H12v3.98h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.27z"/>
+<path fill="#34A853" d="M12 21.5c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.54 0-4.69-1.72-5.46-4.03H3.29v2.53A9.74 9.74 0 0 0 12 21.5z"/>
+<path fill="#FBBC05" d="M6.54 13.58A5.86 5.86 0 0 1 6.23 12c0-.55.11-1.09.31-1.58V7.89H3.29A9.5 9.5 0 0 0 2.25 12c0 1.53.37 2.97 1.04 4.11l3.25-2.53z"/>
+<path fill="#EA4335" d="M12 6.39c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.84 3.49 14.63 2.5 12 2.5a9.74 9.74 0 0 0-8.71 5.39l3.25 2.53C7.31 8.11 9.46 6.39 12 6.39z"/>
+</svg>
+<span class="">Continue with Google</span>
+</button>
+<button class="btn-secondary w-full rounded-xl py-3.5 font-label-sm text-label-sm uppercase tracking-wider flex items-center justify-center gap-3" type="button">
+<svg class="social-logo github-logo" viewBox="0 0 24 24" aria-hidden="true">
+<path fill="currentColor" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.79-.25.79-.56v-2.1c-3.2.7-3.87-1.36-3.87-1.36-.53-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.67 1.25 3.32.96.1-.74.4-1.25.72-1.54-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.19-1.49 3.15-1.18 3.15-1.18.62 1.59.23 2.76.11 3.05.73.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.25 5.69.41.36.77 1.07.77 2.16v3.2c0 .31.21.67.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/>
+</svg>
+<span class="">Continue with GitHub</span>
+</button>
+</div>
+</form>
+</div>
+<!-- Footer Link -->
+<div class="mt-8 text-center fade-in delay-300">
+<p class="font-body-md text-on-surface-variant relative z-10">
+            New to CodeSentinel-AI? 
+            <a class="text-primary hover:text-primary-fixed font-medium ml-1 transition-colors" href="#">Create Account</a>
+</p>
+</div>
+</div>
+</div>
+<!-- Shader Script -->
+<script>
+    const canvas = document.getElementById('glcanvas');
+    if (canvas) {
+        const gl = canvas.getContext('webgl');
+        
+        if (gl) {
+            const vsSource = `
+                attribute vec4 aVertexPosition;
+                attribute vec2 aTextureCoord;
+                varying highp vec2 v_texCoord;
+                void main(void) {
+                    gl_Position = aVertexPosition;
+                    v_texCoord = aTextureCoord;
+                }
+            `;
+            
+            const fsSource = `
+                precision highp float;
+                varying vec2 v_texCoord;
+                uniform float u_time;
+                uniform vec2 u_resolution;
+
+                float hash(vec2 p) {
+                    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+                }
+
+                void main() {
+                    vec2 uv = v_texCoord;
+                    vec2 st = uv * vec2(u_resolution.x/u_resolution.y, 1.0);
+                    
+                    vec3 color = vec3(0.015, 0.015, 0.02); // Deep obsidian base
+                    
+                    // Subtle scanning line
+                    float scan = smoothstep(0.4, 0.5, sin(uv.y * 2.0 - u_time * 0.5)) * 
+                                 smoothstep(0.6, 0.5, sin(uv.y * 2.0 - u_time * 0.5));
+                    color += vec3(0.0, 0.1, 0.15) * scan * 0.2;
+                    
+                    // Faint grid
+                    vec2 grid = fract(st * 40.0);
+                    float lines = step(0.98, grid.x) + step(0.98, grid.y);
+                    color += vec3(0.0, 0.94, 1.0) * lines * 0.03;
+                    
+                    gl_FragColor = vec4(color, 1.0);
+                }
+            `;
+            
+            function initShaderProgram(gl, vsSource, fsSource) {
+                const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+                const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+                const shaderProgram = gl.createProgram();
+                gl.attachShader(shaderProgram, vertexShader);
+                gl.attachShader(shaderProgram, fragmentShader);
+                gl.linkProgram(shaderProgram);
+                return shaderProgram;
+            }
+            
+            function loadShader(gl, type, source) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                return shader;
+            }
+            
+            const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+            const programInfo = {
+                program: shaderProgram,
+                attribLocations: {
+                    vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+                    textureCoord: gl.getAttribLocation(shaderProgram, 'aTextureCoord'),
+                },
+                uniformLocations: {
+                    time: gl.getUniformLocation(shaderProgram, 'u_time'),
+                    resolution: gl.getUniformLocation(shaderProgram, 'u_resolution'),
+                },
+            };
+            
+            const positions = [
+                -1.0,  1.0,
+                 1.0,  1.0,
+                -1.0, -1.0,
+                 1.0, -1.0,
+            ];
+            
+            const texCoords = [
+                0.0, 0.0,
+                1.0, 0.0,
+                0.0, 1.0,
+                1.0, 1.0,
+            ];
+            
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+            
+            const texCoordBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texCoords), gl.STATIC_DRAW);
+            
+            function resize() {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+            window.addEventListener('resize', resize);
+            resize();
+            
+            let startTime = Date.now();
+            
+            function render() {
+                gl.clearColor(0.0, 0.0, 0.0, 1.0);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                
+                gl.useProgram(programInfo.program);
+                
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+                
+                gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+                gl.vertexAttribPointer(programInfo.attribLocations.textureCoord, 2, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord);
+                
+                gl.uniform1f(programInfo.uniformLocations.time, (Date.now() - startTime) * 0.001);
+                gl.uniform2f(programInfo.uniformLocations.resolution, canvas.width, canvas.height);
+                
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+                
+                requestAnimationFrame(render);
+            }
+            render();
+        }
+    }
+</script>
+<!-- Three.js Script -->
+<script>
+(function () {
+  "use strict";
+
+  const container = document.getElementById("threejs-container");
+
+  if (!container || typeof THREE === "undefined") {
+    console.error("CodeSentinel-AI: Three.js failed to initialize.");
+    return;
+  }
+
+  // Avoid duplicate animation instances during hot reloads.
+  if (container.dataset.threeInitialized === "true") return;
+  container.dataset.threeInitialized = "true";
+
+  // Scene
+  const scene = new THREE.Scene();
+
+  // Camera
+  const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
+  camera.position.set(0, 0, 6);
+  camera.lookAt(0, 0, 0);
+
+  // Renderer
+  const renderer = new THREE.WebGLRenderer({
+    alpha: true,
+    antialias: true,
+    powerPreference: "high-performance"
+  });
+
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x000000, 0);
+
+  renderer.domElement.style.position = "absolute";
+  renderer.domElement.style.inset = "0";
+  renderer.domElement.style.width = "100%";
+  renderer.domElement.style.height = "100%";
+  renderer.domElement.style.display = "block";
+  renderer.domElement.style.pointerEvents = "none";
+
+  container.appendChild(renderer.domElement);
+
+  // Sentinel Core
+  const coreGroup = new THREE.Group();
+  coreGroup.position.set(0.15, -0.05, 0);
+  scene.add(coreGroup);
+
+  const innerGeometry = new THREE.IcosahedronGeometry(1.15, 1);
+
+  const innerMaterial = new THREE.MeshPhongMaterial({
+    color: 0x00f0ff,
+    emissive: 0x004b5a,
+    emissiveIntensity: 1.15,
+    shininess: 100,
+    flatShading: true,
+    transparent: true,
+    opacity: 0.94
+  });
+
+  const innerMesh = new THREE.Mesh(innerGeometry, innerMaterial);
+  coreGroup.add(innerMesh);
+
+  // Outer wireframe shell
+  const outerGeometry = new THREE.IcosahedronGeometry(1.78, 1);
+
+  const outerMaterial = new THREE.MeshBasicMaterial({
+    color: 0x00f0ff,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.30,
+    depthWrite: false
+  });
+
+  const outerMesh = new THREE.Mesh(outerGeometry, outerMaterial);
+  coreGroup.add(outerMesh);
+
+  // Particle field
+  const particleCount = 800;
+  const positions = new Float32Array(particleCount * 3);
+
+  for (let i = 0; i < particleCount; i++) {
+    const i3 = i * 3;
+
+    positions[i3] = (Math.random() - 0.5) * 12;
+    positions[i3 + 1] = (Math.random() - 0.5) * 8;
+    positions[i3 + 2] = (Math.random() - 0.5) * 8;
+  }
+
+  const particlesGeometry = new THREE.BufferGeometry();
+
+  particlesGeometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(positions, 3)
+  );
+
+  const particlesMaterial = new THREE.PointsMaterial({
+    color: 0x00f0ff,
+    size: 0.025,
+    transparent: true,
+    opacity: 0.55,
+    depthWrite: false
+  });
+
+  const particles = new THREE.Points(
+    particlesGeometry,
+    particlesMaterial
+  );
+
+  scene.add(particles);
+
+  // Lighting
+  scene.add(new THREE.AmbientLight(0xffffff, 0.62));
+
+  const cyanLight = new THREE.PointLight(0x00f0ff, 2.5, 40);
+  cyanLight.position.set(4, 4, 6);
+  scene.add(cyanLight);
+
+  const secondaryLight = new THREE.PointLight(0x00aabb, 1.25, 30);
+  secondaryLight.position.set(-4, -3, 4);
+  scene.add(secondaryLight);
+
+  // Resize using the actual left visual panel.
+  function resize() {
+    const width = Math.max(container.clientWidth, 1);
+    const height = Math.max(container.clientHeight, 1);
+
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(width, height, false);
+  }
+
+  // Smooth animation
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    const time = clock.getElapsedTime();
+
+    coreGroup.rotation.y = time * 0.42;
+    coreGroup.rotation.x = Math.sin(time * 0.22) * 0.10;
+
+    outerMesh.rotation.y = -time * 0.20;
+    outerMesh.rotation.z = time * 0.10;
+
+    const pulse = 1 + Math.sin(time * 1.5) * 0.035;
+    innerMesh.scale.setScalar(pulse);
+
+    particles.rotation.y = time * 0.025;
+    particles.rotation.x = Math.sin(time * 0.12) * 0.025;
+
+    cyanLight.position.x = Math.sin(time * 0.35) * 4;
+    cyanLight.position.y = 2 + Math.cos(time * 0.28) * 3;
+
+    renderer.render(scene, camera);
+  }
+
+  window.addEventListener("resize", resize, { passive: true });
+
+  if ("ResizeObserver" in window) {
+    const observer = new ResizeObserver(resize);
+    observer.observe(container);
+  }
+
+  resize();
+  animate();
+})();
+</script>
+
+
+</body></html>

@@ -1,0 +1,928 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>CodeSentinel-AI - Repository Analysis</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            "colors": {
+                "primary-fixed-dim": "#00dbe9",
+                "on-surface": "#e5e2e1",
+                "secondary-fixed": "#efdbff",
+                "on-tertiary-container": "#a83a00",
+                "inverse-primary": "#006970",
+                "secondary": "#dcb8ff",
+                "surface-tint": "#00dbe9",
+                "primary": "#dbfcff",
+                "tertiary-fixed-dim": "#ffb59a",
+                "on-primary": "#00363a",
+                "on-primary-fixed-variant": "#004f54",
+                "error": "#ffb4ab",
+                "surface-variant": "#353534",
+                "tertiary-container": "#ffcfbe",
+                "on-secondary-container": "#dcb7ff",
+                "on-error-container": "#ffdad6",
+                "surface-container-low": "#1c1b1b",
+                "surface-container": "#201f1f",
+                "primary-container": "#00f0ff",
+                "on-primary-container": "#006970",
+                "surface-bright": "#393939",
+                "error-container": "#93000a",
+                "on-secondary-fixed": "#2c0051",
+                "surface-dim": "#131313",
+                "surface": "#131313",
+                "inverse-surface": "#e5e2e1",
+                "on-background": "#e5e2e1",
+                "on-surface-variant": "#b9cacb",
+                "secondary-fixed-dim": "#dcb8ff",
+                "on-secondary": "#480081",
+                "on-tertiary": "#5a1b00",
+                "on-secondary-fixed-variant": "#6700b5",
+                "on-tertiary-fixed": "#370e00",
+                "tertiary": "#fff3f0",
+                "outline": "#849495",
+                "background": "#131313",
+                "inverse-on-surface": "#313030",
+                "primary-fixed": "#7df4ff",
+                "on-primary-fixed": "#002022",
+                "surface-container-lowest": "#0e0e0e",
+                "surface-container-highest": "#353534",
+                "outline-variant": "#3b494b",
+                "on-tertiary-fixed-variant": "#802a00",
+                "on-error": "#690005",
+                "secondary-container": "#7701d0",
+                "tertiary-fixed": "#ffdbce",
+                "surface-container-high": "#2a2a2a"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+            },
+            "spacing": {
+                "margin": "24px",
+                "container-max": "1440px",
+                "gutter": "16px",
+                "unit": "4px"
+            },
+            "fontFamily": {
+                "headline-md": ["Geist"],
+                "body-lg": ["Geist"],
+                "headline-lg-mobile": ["Geist"],
+                "label-sm": ["JetBrains Mono"],
+                "code-md": ["JetBrains Mono"],
+                "headline-lg": ["Geist"],
+                "body-md": ["Geist"]
+            },
+            "fontSize": {
+                "headline-md": ["24px", {
+                    "lineHeight": "32px",
+                    "letterSpacing": "-0.01em",
+                    "fontWeight": "600"
+                }],
+                "body-lg": ["16px", {
+                    "lineHeight": "24px",
+                    "fontWeight": "400"
+                }],
+                "headline-lg-mobile": ["28px", {
+                    "lineHeight": "34px",
+                    "fontWeight": "700"
+                }],
+                "label-sm": ["11px", {
+                    "lineHeight": "16px",
+                    "letterSpacing": "0.05em",
+                    "fontWeight": "600"
+                }],
+                "code-md": ["14px", {
+                    "lineHeight": "20px",
+                    "fontWeight": "500"
+                }],
+                "headline-lg": ["40px", {
+                    "lineHeight": "48px",
+                    "letterSpacing": "-0.02em",
+                    "fontWeight": "700"
+                }],
+                "body-md": ["14px", {
+                    "lineHeight": "20px",
+                    "fontWeight": "400"
+                }]
+            }
+        }
+    }
+}
+</script>
+
+<style>
+body {
+    background-color: #050505;
+    color: #e5e2e1;
+}
+
+.glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    border: 1px solid #222;
+}
+
+.btn-primary {
+    background-color: #00f0ff;
+    color: #000;
+    border-radius: 0.25rem;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.5);
+}
+
+.input-field {
+    background-color: #0A0A0A;
+    border: 1px solid #222;
+    transition: all 0.3s ease;
+}
+
+.input-field:focus {
+    border-color: #00f0ff;
+    box-shadow: inset 0 0 5px rgba(0, 240, 255, 0.3);
+    outline: none;
+}
+
+/* Premium glass repository controls */
+.repository-input {
+    width: 100%;
+    height: 52px;
+
+    /* Extra space for the GitHub icon */
+    padding: 0 16px 0 58px !important;
+
+    background: rgba(255, 255, 255, 0.035) !important;
+    color: #e5e2e1 !important;
+
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 12px !important;
+
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+
+    outline: none !important;
+
+    transition:
+        border-color 0.3s ease,
+        box-shadow 0.3s ease,
+        background 0.3s ease;
+}
+
+.repository-input::placeholder {
+    color: rgba(229, 226, 225, 0.32) !important;
+}
+
+.repository-input:hover {
+    border-color: rgba(0, 240, 255, 0.35) !important;
+    background: rgba(255, 255, 255, 0.045) !important;
+}
+
+.repository-input:focus {
+    border-color: #00f0ff !important;
+
+    background: rgba(0, 240, 255, 0.025) !important;
+
+    outline: none !important;
+
+    box-shadow:
+        0 0 0 1px rgba(0, 240, 255, 0.15),
+        0 0 18px rgba(0, 240, 255, 0.12),
+        inset 0 0 18px rgba(0, 240, 255, 0.035) !important;
+}
+
+/* GitHub icon positioning */
+.repository-input + * {
+    pointer-events: none;
+}
+
+/* Branch selector */
+select.repository-input {
+    padding-left: 16px !important;
+    padding-right: 48px !important;
+    cursor: pointer;
+}
+
+select.repository-input:focus {
+    border-color: #00f0ff !important;
+    box-shadow:
+        0 0 0 1px rgba(0, 240, 255, 0.15),
+        0 0 18px rgba(0, 240, 255, 0.12) !important;
+}
+
+select.repository-input option {
+    background: #0e0e0e;
+    color: #e5e2e1;
+}
+/* Particle Background Canvas */
+#particleCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.content-wrapper {
+    position: relative;
+    z-index: 10;
+}
+</style>
+</head>
+
+<body class="flex h-screen overflow-hidden bg-[#050505]">
+
+<canvas id="particleCanvas" width="1280" height="1024"></canvas>
+
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-[260px] flex flex-col py-6 z-40 bg-white/3 dark:bg-white/3 backdrop-blur-[20px] border-r border-white/10 hidden md:flex content-wrapper">
+
+<div class="px-6 mb-8 flex items-center space-x-3">
+    <span class="material-symbols-outlined text-primary-fixed-dim"
+          style="font-variation-settings: 'FILL' 1;">
+        security
+    </span>
+
+    <div>
+        <h1 class="font-headline-md text-headline-md font-black text-primary-fixed-dim">
+            CodeSentinel
+        </h1>
+
+        <p class="font-label-sm text-label-sm text-on-surface-variant">
+            AI-Driven Security
+        </p>
+    </div>
+</div>
+
+<div class="flex-1 flex flex-col space-y-2 w-full">
+
+<a class="flex items-center space-x-3 px-6 py-3 text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-colors duration-200 active:translate-x-1 font-body-md text-body-md"
+   href="#">
+    <span class="material-symbols-outlined">dashboard</span>
+    <span>Dashboard</span>
+</a>
+
+<a class="flex items-center space-x-3 px-6 py-3 text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-colors duration-200 active:translate-x-1 font-body-md text-body-md"
+   href="#">
+    <span class="material-symbols-outlined">code</span>
+    <span>Analyze Code</span>
+</a>
+
+<a class="flex items-center space-x-3 px-6 py-3 text-primary-fixed-dim bg-white/10 border-r-2 border-primary-fixed-dim active:translate-x-1 transition-transform font-body-md text-body-md"
+   href="#">
+    <span class="material-symbols-outlined">hub</span>
+    <span class="font-bold">Repository Analysis</span>
+</a>
+
+<a class="flex items-center space-x-3 px-6 py-3 text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-colors duration-200 active:translate-x-1 font-body-md text-body-md"
+   href="#">
+    <span class="material-symbols-outlined">history</span>
+    <span>History</span>
+</a>
+
+<a class="flex items-center space-x-3 px-6 py-3 text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-colors duration-200 active:translate-x-1 font-body-md text-body-md"
+   href="#">
+    <span class="material-symbols-outlined">security</span>
+    <span>Vulnerabilities</span>
+</a>
+
+<a class="flex items-center space-x-3 px-6 py-3 text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-colors duration-200 active:translate-x-1 font-body-md text-body-md"
+   href="#">
+    <span class="material-symbols-outlined">description</span>
+    <span>Reports</span>
+</a>
+
+</div>
+
+</nav>
+
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col md:ml-[260px] h-screen overflow-hidden content-wrapper">
+
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-6 h-16 sticky top-0 z-50 bg-white/3 dark:bg-white/3 backdrop-blur-[20px] border-b border-white/10">
+
+<div class="flex items-center space-x-4 w-1/3">
+    <h2 class="font-headline-md text-headline-md font-bold text-primary-fixed-dim tracking-tight">
+        Repository Analysis
+    </h2>
+</div>
+
+<div class="flex-1 flex justify-center w-1/3"></div>
+
+<div class="flex items-center space-x-4 justify-end w-1/3">
+
+<button class="p-2 text-on-surface-variant hover:text-primary-fixed-dim hover:bg-white/5 transition-all duration-300 rounded-full active:scale-95">
+    <span class="material-symbols-outlined">notifications</span>
+</button>
+
+<button class="p-2 text-on-surface-variant hover:text-primary-fixed-dim hover:bg-white/5 transition-all duration-300 rounded-full active:scale-95">
+    <span class="material-symbols-outlined">contrast</span>
+</button>
+
+<button class="p-2 text-on-surface-variant hover:text-primary-fixed-dim hover:bg-white/5 transition-all duration-300 rounded-full active:scale-95">
+    <span class="material-symbols-outlined">settings</span>
+</button>
+
+<div class="w-8 h-8 rounded-full bg-surface-variant overflow-hidden border border-white/10 ml-2 cursor-pointer">
+    <div class="w-full h-full bg-gradient-to-br from-primary-fixed-dim/30 to-secondary/30 flex items-center justify-center text-primary-fixed-dim font-bold text-sm">
+        US
+    </div>
+</div>
+
+</div>
+</header>
+
+<!-- Scrollable Content -->
+<main class="flex-1 overflow-y-auto p-margin">
+
+<div class="max-w-[container-max] mx-auto space-y-margin">
+
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8">
+
+<div>
+    <h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2">
+        Repository Analysis
+    </h1>
+
+    <p class="font-body-lg text-body-lg text-on-surface-variant">
+        Analyze an entire codebase for security vulnerabilities.
+    </p>
+</div>
+
+<div class="mt-4 md:mt-0 flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+
+<span class="w-2 h-2 rounded-full bg-primary-fixed-dim animate-pulse shadow-[0_0_8px_rgba(0,219,233,0.8)]"></span>
+
+<span class="font-label-sm text-label-sm text-primary-fixed-dim uppercase tracking-wider">
+    Analysis Engine Ready
+</span>
+
+</div>
+</div>
+
+<!-- Main Layout Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+
+<!-- Left Column: Input & Config -->
+<div class="lg:col-span-8 space-y-gutter">
+
+<!-- Repository Input Panel -->
+<div class="glass-panel p-6 rounded-xl">
+
+<h3 class="font-headline-md text-headline-md text-on-surface mb-5 pb-3 border-b border-white/10">
+    Target Repository
+</h3>
+
+<div class="space-y-5">
+
+<!-- Repository URL -->
+<div>
+
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2">
+    REPOSITORY URL
+</label>
+
+<div class="relative">
+
+<!-- GitHub Icon -->
+<div class="absolute left-5 top-1/2 -translate-y-1/2 z-10 text-on-surface-variant">
+
+<svg
+    class="w-5 h-5"
+    fill="currentColor"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+>
+<path d="M12 0C5.373 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387
+.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416
+-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729
+1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304
+3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334
+-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524
+.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399
+3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552
+3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176
+.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624
+-5.479 5.921.43.372.823 1.102.823 2.222v3.293
+c0 .319.192.694.801.576C20.565 21.796 24 17.299 24 12
+24 5.373 18.627 0 12 0z">
+</path>
+</svg>
+
+</div>
+
+<input
+    class="repository-input"
+    placeholder="https://github.com/example/payment-service"
+    type="text"
+    value="https://github.com/example/payment-service"
+>
+
+</div>
+</div>
+
+<!-- Branch -->
+<div class="max-w-md">
+
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2">
+    BRANCH
+</label>
+
+<div class="relative">
+
+<select class="repository-input appearance-none pr-12">
+
+<option value="main">main</option>
+<option value="master">master</option>
+<option value="develop">develop</option>
+
+</select>
+
+<div class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-on-surface-variant">
+
+<span class="material-symbols-outlined">
+    expand_more
+</span>
+
+</div>
+
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- Analysis Configuration Panel -->
+<div class="glass-panel p-6 rounded-lg">
+
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4 pb-2 border-b border-[#222]">
+    Analysis Configuration
+</h3>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2">
+    DETECTION MODEL
+</label>
+
+<select class="input-field w-full p-2.5 font-body-md text-body-md rounded text-on-surface">
+<option>CodeSentinel R-GCN</option>
+<option>Standard Static (SAST)</option>
+<option>Hybrid Semantic</option>
+</select>
+</div>
+
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2">
+    ANALYSIS DEPTH
+</label>
+
+<select class="input-field w-full p-2.5 font-body-md text-body-md rounded text-on-surface">
+<option>Standard</option>
+<option>Deep (Inter-procedural)</option>
+<option>Fast (Surface)</option>
+</select>
+</div>
+
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2">
+    CONFIDENCE THRESHOLD
+</label>
+
+<div class="flex items-center space-x-3">
+
+<input
+    class="flex-1 accent-primary-fixed-dim"
+    max="1"
+    min="0"
+    step="0.05"
+    type="range"
+    value="0.70"
+>
+
+<span class="font-code-md text-code-md text-primary-fixed-dim bg-primary-fixed-dim/10 px-2 py-1 rounded">
+    0.70
+</span>
+
+</div>
+</div>
+
+<div class="flex items-center justify-between">
+
+<div>
+
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">
+    AI EXPLAINABILITY
+</label>
+
+<span class="font-body-md text-body-md text-on-surface">
+    Generate mitigation steps
+</span>
+
+</div>
+
+<label class="relative inline-flex items-center cursor-pointer">
+
+<input checked class="sr-only peer" type="checkbox" value="">
+
+<div class="w-11 h-6 bg-surface-variant rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-fixed-dim">
+</div>
+
+</label>
+
+</div>
+
+</div>
+</div>
+
+</div>
+
+<!-- Right Column -->
+<div class="lg:col-span-4 space-y-gutter">
+
+<!-- Action Card -->
+<div class="glass-panel p-6 rounded-lg relative overflow-hidden group">
+
+<div class="absolute -top-10 -right-10 w-40 h-40 bg-primary-fixed-dim/20 rounded-full blur-3xl group-hover:bg-primary-fixed-dim/30 transition-all"></div>
+
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2 relative z-10">
+    Start Analysis
+</h3>
+
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 relative z-10">
+    Initiate AI-driven security scanning on the target codebase.
+</p>
+
+<button
+    class="w-full btn-primary py-4 px-6 font-headline-md text-[18px] flex items-center justify-center space-x-2 relative z-10"
+    id="startAnalysisBtn"
+>
+
+<span class="material-symbols-outlined font-bold">radar</span>
+
+<span>Start Repository Analysis</span>
+
+</button>
+
+<!-- Loading State -->
+<div class="hidden mt-6 relative z-10" id="analysisProgress">
+
+<div class="flex justify-between items-center mb-2">
+
+<span class="font-label-sm text-label-sm text-primary-fixed-dim animate-pulse">
+    Analyzing Repository...
+</span>
+
+<span class="font-code-md text-code-md text-on-surface">
+    45%
+</span>
+
+</div>
+
+<div class="w-full bg-[#111] rounded-full h-1.5 mb-4 border border-[#333]">
+
+<div class="bg-primary-fixed-dim h-1.5 rounded-full shadow-[0_0_10px_rgba(0,240,255,0.8)] transition-all duration-500 w-[45%]">
+</div>
+
+</div>
+
+<div class="space-y-2">
+
+<div class="flex items-center space-x-2 opacity-50">
+<span class="material-symbols-outlined text-sm text-green-400">check_circle</span>
+<span class="font-code-md text-xs text-on-surface">Fetching repository...</span>
+</div>
+
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-sm text-primary-fixed-dim animate-spin">refresh</span>
+<span class="font-code-md text-xs text-on-surface">Scanning AST structures...</span>
+</div>
+
+<div class="flex items-center space-x-2 opacity-30">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">pending</span>
+<span class="font-code-md text-xs text-on-surface">Running R-GCN models...</span>
+</div>
+
+</div>
+</div>
+</div>
+
+<!-- Repository Info Card -->
+<div class="glass-panel p-6 rounded-lg">
+
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4 pb-2 border-b border-[#222]">
+    Repository Metadata
+</h3>
+
+<div class="space-y-3">
+
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant">REPOSITORY</span>
+<span class="font-code-md text-code-md text-on-surface">payment-service</span>
+</div>
+
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant">OWNER</span>
+<span class="font-code-md text-code-md text-on-surface">example</span>
+</div>
+
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant">FILES</span>
+<span class="font-code-md text-code-md text-on-surface">84</span>
+</div>
+
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant">LOC</span>
+<span class="font-code-md text-code-md text-on-surface">18,492</span>
+</div>
+
+</div>
+
+<div class="mt-6 pt-4 border-t border-[#222]">
+
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-2">
+    DETECTED LANGUAGES
+</span>
+
+<div class="flex flex-wrap gap-2">
+
+<span class="px-2 py-1 bg-white/5 border border-[#333] rounded text-xs font-code-md text-[#3572A5]">
+    Python 65%
+</span>
+
+<span class="px-2 py-1 bg-white/5 border border-[#333] rounded text-xs font-code-md text-[#f34b7d]">
+    C++ 20%
+</span>
+
+<span class="px-2 py-1 bg-white/5 border border-[#333] rounded text-xs font-code-md text-[#f1e05a]">
+    JavaScript 15%
+</span>
+
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+<!-- Bottom Full Width: File Tree -->
+<div class="glass-panel p-6 rounded-lg mt-gutter">
+
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4 pb-2 border-b border-[#222]">
+    Repository Structure
+</h3>
+
+<div class="font-code-md text-code-md text-on-surface-variant bg-[#0A0A0A] p-4 rounded border border-[#222] overflow-x-auto">
+
+<div class="flex items-center space-x-2 text-primary-fixed-dim mb-2">
+<span class="material-symbols-outlined text-sm">folder_open</span>
+<span>payment-service/</span>
+</div>
+
+<div class="pl-6 space-y-1">
+
+<div class="flex items-center space-x-2 hover:bg-white/5 p-1 rounded transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm text-[#E3C981]">folder</span>
+<span>src/</span>
+</div>
+
+<div class="pl-6 space-y-1">
+
+<div class="flex items-center space-x-2 hover:bg-white/5 p-1 rounded transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm text-[#3572A5]">description</span>
+<span>auth_handler.py</span>
+</div>
+
+<div class="flex items-center space-x-2 hover:bg-white/5 p-1 rounded transition-colors cursor-pointer">
+
+<span class="material-symbols-outlined text-sm text-[#3572A5]">
+description
+</span>
+
+<span>payment_processor.py</span>
+
+<span class="ml-auto text-xs bg-error/10 text-error px-1.5 rounded border border-error/20">
+    High Risk Area
+</span>
+
+</div>
+
+<div class="flex items-center space-x-2 hover:bg-white/5 p-1 rounded transition-colors cursor-pointer">
+
+<span class="material-symbols-outlined text-sm text-[#f34b7d]">
+description
+</span>
+
+<span>crypto_utils.cpp</span>
+
+</div>
+
+</div>
+
+<div class="flex items-center space-x-2 hover:bg-white/5 p-1 rounded transition-colors cursor-pointer mt-1">
+<span class="material-symbols-outlined text-sm text-[#E3C981]">folder</span>
+<span>tests/</span>
+</div>
+
+<div class="flex items-center space-x-2 hover:bg-white/5 p-1 rounded transition-colors cursor-pointer mt-1">
+<span class="material-symbols-outlined text-sm text-[#E3C981]">folder</span>
+<span>config/</span>
+</div>
+
+<div class="flex items-center space-x-2 hover:bg-white/5 p-1 rounded transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm">description</span>
+<span>docker-compose.yml</span>
+</div>
+
+<div class="flex items-center space-x-2 hover:bg-white/5 p-1 rounded transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm">description</span>
+<span>README.md</span>
+</div>
+
+</div>
+</div>
+</div>
+
+<!-- Bottom spacing -->
+<div class="h-20"></div>
+
+</main>
+</div>
+
+<!-- Simple JS for UI Interaction and Particle Background -->
+<script>
+
+/* Start Analysis Button Simulation */
+
+const btn = document.getElementById('startAnalysisBtn');
+const progress = document.getElementById('analysisProgress');
+
+btn.addEventListener('click', () => {
+
+    btn.innerHTML =
+        '<span class="material-symbols-outlined font-bold animate-spin">autorenew</span>' +
+        '<span>Initializing...</span>';
+
+    btn.classList.add('opacity-80', 'cursor-not-allowed');
+
+    setTimeout(() => {
+        btn.style.display = 'none';
+        progress.classList.remove('hidden');
+    }, 800);
+
+});
+
+
+/* Lightweight Particle Background */
+
+const canvas = document.getElementById('particleCanvas');
+const ctx = canvas.getContext('2d');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const particles = [];
+const particleCount = 40;
+
+class Particle {
+
+    constructor() {
+
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+
+        this.vx = (Math.random() - 0.5) * 0.2;
+        this.vy = (Math.random() - 0.5) * 0.2;
+
+        this.size = Math.random() * 1.5 + 0.5;
+
+        this.color =
+            `rgba(0, 219, 233, ${Math.random() * 0.15})`;
+    }
+
+    update() {
+
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < 0 || this.x > canvas.width) {
+            this.vx *= -1;
+        }
+
+        if (this.y < 0 || this.y > canvas.height) {
+            this.vy *= -1;
+        }
+
+    }
+
+    draw() {
+
+        ctx.fillStyle = this.color;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            this.x,
+            this.y,
+            this.size,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+
+    }
+
+}
+
+for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+}
+
+function animate() {
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    particles.forEach(p => {
+        p.update();
+        p.draw();
+    });
+
+    /* Connect nearby particles */
+
+    for (let i = 0; i < particles.length; i++) {
+
+        for (let j = i + 1; j < particles.length; j++) {
+
+            const dx =
+                particles[i].x - particles[j].x;
+
+            const dy =
+                particles[i].y - particles[j].y;
+
+            const dist =
+                Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < 150) {
+
+                ctx.strokeStyle =
+                    `rgba(0, 219, 233, ${0.05 * (1 - dist / 150)})`;
+
+                ctx.lineWidth = 0.5;
+
+                ctx.beginPath();
+
+                ctx.moveTo(
+                    particles[i].x,
+                    particles[i].y
+                );
+
+                ctx.lineTo(
+                    particles[j].x,
+                    particles[j].y
+                );
+
+                ctx.stroke();
+
+            }
+        }
+    }
+
+    requestAnimationFrame(animate);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+});
+
+</script>
+
+</body>
+</html>

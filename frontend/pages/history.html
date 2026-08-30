@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Analysis History - CodeSentinel-AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-container": "#dcb7ff",
+                      "on-secondary-fixed": "#2c0051",
+                      "surface-container-highest": "#353534",
+                      "surface-bright": "#393939",
+                      "on-error-container": "#ffdad6",
+                      "tertiary-fixed-dim": "#ffb59a",
+                      "surface": "#131313",
+                      "inverse-primary": "#006970",
+                      "on-error": "#690005",
+                      "on-tertiary": "#5a1b00",
+                      "on-primary-fixed": "#002022",
+                      "secondary-container": "#7701d0",
+                      "primary": "#dbfcff",
+                      "outline-variant": "#3b494b",
+                      "surface-container": "#201f1f",
+                      "on-primary": "#00363a",
+                      "surface-container-high": "#2a2a2a",
+                      "outline": "#849495",
+                      "surface-dim": "#131313",
+                      "on-primary-fixed-variant": "#004f54",
+                      "on-surface-variant": "#b9cacb",
+                      "secondary-fixed": "#efdbff",
+                      "on-primary-container": "#006970",
+                      "error": "#ffb4ab",
+                      "surface-tint": "#00dbe9",
+                      "surface-variant": "#353534",
+                      "secondary": "#dcb8ff",
+                      "primary-fixed-dim": "#00dbe9",
+                      "tertiary-container": "#ffcfbe",
+                      "tertiary": "#fff3f0",
+                      "background": "#131313",
+                      "primary-fixed": "#7df4ff",
+                      "on-surface": "#e5e2e1",
+                      "inverse-surface": "#e5e2e1",
+                      "tertiary-fixed": "#ffdbce",
+                      "on-secondary-fixed-variant": "#6700b5",
+                      "on-tertiary-fixed-variant": "#802a00",
+                      "on-background": "#e5e2e1",
+                      "error-container": "#93000a",
+                      "on-tertiary-container": "#a83a00",
+                      "surface-container-lowest": "#0e0e0e",
+                      "primary-container": "#00f0ff",
+                      "surface-container-low": "#1c1b1b",
+                      "inverse-on-surface": "#313030",
+                      "on-tertiary-fixed": "#370e00",
+                      "secondary-fixed-dim": "#dcb8ff",
+                      "on-secondary": "#480081"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "unit": "4px",
+                      "margin": "24px",
+                      "container-max": "1440px"
+              },
+              "fontFamily": {
+                      "code-md": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg": [
+                              "Geist"
+                      ],
+                      "headline-md": [
+                              "Geist"
+                      ],
+                      "label-sm": [
+                              "JetBrains Mono"
+                      ],
+                      "body-lg": [
+                              "Geist"
+                      ],
+                      "headline-lg-mobile": [
+                              "Geist"
+                      ],
+                      "body-md": [
+                              "Geist"
+                      ]
+              },
+              "fontSize": {
+                      "code-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "40px",
+                              {
+                                      "lineHeight": "48px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "11px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "34px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body {
+            background-color: #0e0e0e; /* surface-container-lowest */
+            color: #e5e2e1; /* on-surface */
+            overflow-x: hidden;
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .glass-table-row {
+            background: rgba(255, 255, 255, 0.01);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .glass-table-row:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-bottom-color: rgba(0, 240, 255, 0.2);
+            box-shadow: 0 4px 20px -2px rgba(0,0,0,0.5);
+            transform: translateY(-1px);
+        }
+
+        .glass-input {
+            background: #0A0A0A;
+            border: 1px solid #222;
+            color: #e5e2e1;
+            transition: all 0.2s ease;
+        }
+
+        .glass-input:focus {
+            outline: none;
+            border-color: #00f0ff;
+            box-shadow: inset 0 0 4px rgba(0, 240, 255, 0.3);
+        }
+
+        .ambient-glow {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.03) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .ambient-glow-secondary {
+            position: fixed;
+            bottom: -10%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(119, 1, 208, 0.04) 0%, transparent 60%); /* secondary-container */
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .btn-primary {
+            background-color: #00f0ff;
+            color: #002022;
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid #00f0ff;
+            color: #00f0ff;
+            transition: all 0.2s ease;
+        }
+        .btn-ghost:hover {
+            background: rgba(0, 240, 255, 0.1);
+        }
+
+        /* Staggered Fade In Animation */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-up {
+            animation: fadeUp 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        .delay-500 { animation-delay: 500ms; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2); 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1); 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.2); 
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex relative overflow-x-hidden">
+<div class="ambient-glow"></div>
+<div class="ambient-glow-secondary"></div>
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-screen w-[260px] bg-white/5 dark:bg-white/5 backdrop-blur-xl border-r border-white/10 shadow-none z-50 flex flex-col py-margin">
+<div class="px-gutter mb-8 flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container" data-icon="shield">shield</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary leading-tight">CodeSentinel-AI</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">AI-Driven Security</p>
+</div>
+</div>
+<div class="flex-1 px-4 space-y-2">
+<!-- Dashboard -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary-container transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span class="font-body-md text-body-md font-medium">Dashboard</span>
+</a>
+<!-- Analyze Code -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary-container transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">code</span>
+<span class="font-body-md text-body-md font-medium">Analyze Code</span>
+</a>
+<!-- Repository Analysis -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary-container transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_tree</span>
+<span class="font-body-md text-body-md font-medium">Repository Analysis</span>
+</a>
+<!-- History (ACTIVE) -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary-container dark:text-primary-container font-bold border-r-2 border-primary-container bg-primary-container/10 shadow-[0_0_15px_rgba(0,240,255,0.2)] scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">history</span>
+<span class="font-body-md text-body-md font-medium">History</span>
+</a>
+<!-- Vulnerabilities -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary-container transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">security</span>
+<span class="font-body-md text-body-md font-medium">Vulnerabilities</span>
+</a>
+<!-- Reports -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary-container transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">description</span>
+<span class="font-body-md text-body-md font-medium">Reports</span>
+</a>
+</div>
+<div class="px-4 mt-auto space-y-2 border-t border-white/10 pt-4">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary-container transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="font-body-md text-body-md font-medium">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary-container transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+<span class="font-body-md text-body-md font-medium">Profile</span>
+</a>
+</div>
+</nav>
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] h-16 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 z-40 flex justify-end items-center px-4 ml-[260px]">
+<button class="text-primary dark:text-primary-fixed-dim hover:opacity-80 transition-opacity p-2">
+<span class="material-symbols-outlined" data-icon="dark_mode">dark_mode</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<div class="flex-1 w-full ml-[260px] flex justify-center">
+<main class="w-full max-w-[1440px] pt-[96px] pb-24 md:pb-8 px-4 md:px-[24px] lg:px-8">
+<!-- Header Section -->
+<div class="mb-8 animate-fade-up">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-2">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Analysis History</h1>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-container/10 border border-primary-container/20">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-code-md text-[12px] text-primary-container">Analysis Archive</span>
+</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">Review previous security analyses and revisit detected findings.</p>
+</div>
+<div class="flex gap-3">
+<button class="btn-ghost rounded-lg px-4 py-2 font-code-md text-code-md flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+                        Export Report
+                    </button>
+<button class="btn-primary rounded-lg px-4 py-2 font-code-md text-code-md flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                        New Scan
+                    </button>
+</div>
+</div>
+</div>
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<!-- Card 1 -->
+<div class="glass-panel rounded-xl p-5 animate-fade-up delay-100 flex flex-col justify-between h-[120px]">
+<div class="flex justify-between items-start">
+<span class="font-code-md text-[12px] text-on-surface-variant tracking-wider uppercase">Total Analyses</span>
+<span class="material-symbols-outlined text-on-surface-variant opacity-50" data-icon="list_alt">list_alt</span>
+</div>
+<div class="font-headline-md text-[32px] font-bold text-on-surface mt-2">128</div>
+</div>
+<!-- Card 2 -->
+<div class="glass-panel rounded-xl p-5 animate-fade-up delay-200 flex flex-col justify-between h-[120px]">
+<div class="flex justify-between items-start">
+<span class="font-code-md text-[12px] text-on-surface-variant tracking-wider uppercase">Average Score</span>
+<span class="material-symbols-outlined text-primary-container opacity-50" data-icon="speed">speed</span>
+</div>
+<div class="flex items-end gap-2 mt-2">
+<span class="font-headline-md text-[32px] font-bold text-on-surface">89.4</span>
+<span class="font-code-md text-[14px] text-primary-container mb-1">/100</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="glass-panel rounded-xl p-5 animate-fade-up delay-300 flex flex-col justify-between h-[120px]">
+<div class="flex justify-between items-start">
+<span class="font-code-md text-[12px] text-on-surface-variant tracking-wider uppercase">Vulnerabilities Found</span>
+<span class="material-symbols-outlined text-error opacity-50" data-icon="bug_report">bug_report</span>
+</div>
+<div class="font-headline-md text-[32px] font-bold text-on-surface mt-2">37</div>
+</div>
+<!-- Card 4 -->
+<div class="glass-panel rounded-xl p-5 animate-fade-up delay-400 flex flex-col justify-between h-[120px] relative overflow-hidden">
+<div class="absolute inset-0 bg-error/5 pointer-events-none"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="font-code-md text-[12px] text-error tracking-wider uppercase">Critical Findings</span>
+<span class="material-symbols-outlined text-error" data-icon="warning">warning</span>
+</div>
+<div class="font-headline-md text-[32px] font-bold text-error mt-2 relative z-10">4</div>
+</div>
+</div>
+<!-- Toolbar / Filters -->
+<div class="glass-panel rounded-xl p-4 mb-6 flex flex-col lg:flex-row gap-4 justify-between items-center animate-fade-up delay-500 z-20 relative">
+<div class="relative w-full lg:w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="search">search</span>
+<input class="glass-input w-full pl-10 pr-4 py-2 rounded-lg font-code-md text-[14px]" placeholder="Search analyses..." type="text"/>
+</div>
+<div class="flex flex-wrap gap-3 w-full lg:w-auto">
+<select class="glass-input rounded-lg px-3 py-2 font-code-md text-[13px] appearance-none cursor-pointer pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%24%2024%22%20fill%3D%22none%22%20stroke%3D%22%23b9cacb%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_8px_center] bg-[length:16px]">
+<option disabled="" selected="" value="">TYPE: All</option>
+<option value="all">All</option>
+<option value="file">File</option>
+<option value="repo">Repo</option>
+</select>
+<select class="glass-input rounded-lg px-3 py-2 font-code-md text-[13px] appearance-none cursor-pointer pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%24%2024%22%20fill%3D%22none%22%20stroke%3D%22%23b9cacb%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_8px_center] bg-[length:16px]">
+<option disabled="" selected="" value="">STATUS: All</option>
+<option value="all">All</option>
+<option value="completed">Completed</option>
+<option value="in_progress">In Progress</option>
+<option value="failed">Failed</option>
+</select>
+<select class="glass-input rounded-lg px-3 py-2 font-code-md text-[13px] appearance-none cursor-pointer pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%24%2024%22%20fill%3D%22none%22%20stroke%3D%22%23b9cacb%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_8px_center] bg-[length:16px]">
+<option disabled="" selected="" value="">SEVERITY: All</option>
+<option value="all">All</option>
+<option value="critical">Critical</option>
+<option value="high">High</option>
+<option value="medium">Medium</option>
+<option value="low">Low</option>
+</select>
+<div class="h-8 w-px bg-outline-variant/30 hidden lg:block mx-1"></div>
+<select class="glass-input rounded-lg px-3 py-2 font-code-md text-[13px] appearance-none cursor-pointer pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%24%2024%22%20fill%3D%22none%22%20stroke%3D%22%23b9cacb%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_8px_center] bg-[length:16px]">
+<option value="recent">Sort by: Most Recent</option>
+<option value="score_asc">Score (Low to High)</option>
+<option value="score_desc">Score (High to Low)</option>
+</select>
+</div>
+</div>
+<!-- History List (Table) -->
+<div class="glass-panel rounded-xl overflow-hidden animate-fade-up delay-500 z-10 relative">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/30 bg-surface/50 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+<th class="px-6 py-4 font-semibold">Type</th>
+<th class="px-6 py-4 font-semibold">Target</th>
+<th class="px-6 py-4 font-semibold">Language</th>
+<th class="px-6 py-4 font-semibold">Score</th>
+<th class="px-6 py-4 font-semibold">Issues</th>
+<th class="px-6 py-4 font-semibold">Date</th>
+<th class="px-6 py-4 font-semibold">Status</th>
+<th class="px-6 py-4 font-semibold text-right">Action</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-[14px]">
+<!-- Row 1 -->
+<tr class="glass-table-row group">
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-code-md bg-white/5 text-on-surface border border-white/10">
+<span class="material-symbols-outlined text-[14px]" data-icon="description">description</span>
+                                    FILE
+                                </span>
+</td>
+<td class="px-6 py-4 font-code-md font-medium text-on-surface">main.cpp</td>
+<td class="px-6 py-4 text-on-surface-variant">C++</td>
+<td class="px-6 py-4 font-code-md">
+<div class="flex items-center gap-2">
+<span class="text-tertiary-fixed-dim">78</span><span class="text-on-surface-variant/50 text-[12px]">/100</span>
+<div class="w-16 h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-tertiary-fixed-dim w-[78%]"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-code-md bg-error/10 text-error border border-error/20">
+                                    13 (Critical)
+                                </span>
+</td>
+<td class="px-6 py-4 text-on-surface-variant">Today</td>
+<td class="px-6 py-4">
+<span class="flex items-center gap-1.5 text-primary-container text-[13px]">
+<span class="material-symbols-outlined text-[16px]" data-icon="check_circle">check_circle</span>
+                                    Completed
+                                </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary-container hover:text-primary-fixed text-[13px] font-medium flex items-center justify-end gap-1 ml-auto opacity-70 group-hover:opacity-100 transition-opacity">
+                                    View Results
+                                    <span class="material-symbols-outlined text-[16px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="glass-table-row group">
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-code-md bg-white/5 text-on-surface border border-white/10">
+<span class="material-symbols-outlined text-[14px]" data-icon="folder">folder</span>
+                                    REPOSITORY
+                                </span>
+</td>
+<td class="px-6 py-4 font-code-md font-medium text-on-surface">payment-service</td>
+<td class="px-6 py-4 text-on-surface-variant">Mixed</td>
+<td class="px-6 py-4 font-code-md">
+<div class="flex items-center gap-2">
+<span class="text-primary-container">92</span><span class="text-on-surface-variant/50 text-[12px]">/100</span>
+<div class="w-16 h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-primary-container w-[92%]"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-code-md bg-[#FF8A00]/10 text-[#FF8A00] border border-[#FF8A00]/20"> <!-- Manual orange for High per prompt instructions if not in config -->
+                                    4 (High)
+                                </span>
+</td>
+<td class="px-6 py-4 text-on-surface-variant">Yesterday</td>
+<td class="px-6 py-4">
+<span class="flex items-center gap-1.5 text-primary-container text-[13px]">
+<span class="material-symbols-outlined text-[16px]" data-icon="check_circle">check_circle</span>
+                                    Completed
+                                </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary-container hover:text-primary-fixed text-[13px] font-medium flex items-center justify-end gap-1 ml-auto opacity-70 group-hover:opacity-100 transition-opacity">
+                                    View Results
+                                    <span class="material-symbols-outlined text-[16px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="glass-table-row group">
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-code-md bg-white/5 text-on-surface border border-white/10">
+<span class="material-symbols-outlined text-[14px]" data-icon="description">description</span>
+                                    FILE
+                                </span>
+</td>
+<td class="px-6 py-4 font-code-md font-medium text-on-surface">auth.py</td>
+<td class="px-6 py-4 text-on-surface-variant">Python</td>
+<td class="px-6 py-4 font-code-md">
+<div class="flex items-center gap-2">
+<span class="text-primary-container">96</span><span class="text-on-surface-variant/50 text-[12px]">/100</span>
+<div class="w-16 h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-primary-container w-[96%]"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-code-md bg-[#FFD600]/10 text-[#FFD600] border border-[#FFD600]/20"> <!-- Manual yellow for Medium -->
+                                    2 (Medium)
+                                </span>
+</td>
+<td class="px-6 py-4 text-on-surface-variant">2 days ago</td>
+<td class="px-6 py-4">
+<span class="flex items-center gap-1.5 text-primary-container text-[13px]">
+<span class="material-symbols-outlined text-[16px]" data-icon="check_circle">check_circle</span>
+                                    Completed
+                                </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary-container hover:text-primary-fixed text-[13px] font-medium flex items-center justify-end gap-1 ml-auto opacity-70 group-hover:opacity-100 transition-opacity">
+                                    View Results
+                                    <span class="material-symbols-outlined text-[16px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="glass-table-row group">
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-code-md bg-white/5 text-on-surface border border-white/10">
+<span class="material-symbols-outlined text-[14px]" data-icon="folder">folder</span>
+                                    REPOSITORY
+                                </span>
+</td>
+<td class="px-6 py-4 font-code-md font-medium text-on-surface">api-gateway</td>
+<td class="px-6 py-4 text-on-surface-variant">Go</td>
+<td class="px-6 py-4 font-code-md">
+<div class="flex items-center gap-2">
+<span class="text-tertiary-fixed-dim">84</span><span class="text-on-surface-variant/50 text-[12px]">/100</span>
+<div class="w-16 h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-tertiary-fixed-dim w-[84%]"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-code-md bg-[#FF8A00]/10 text-[#FF8A00] border border-[#FF8A00]/20">
+                                    7 (High)
+                                </span>
+</td>
+<td class="px-6 py-4 text-on-surface-variant">4 days ago</td>
+<td class="px-6 py-4">
+<span class="flex items-center gap-1.5 text-primary-container text-[13px]">
+<span class="material-symbols-outlined text-[16px]" data-icon="check_circle">check_circle</span>
+                                    Completed
+                                </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary-container hover:text-primary-fixed text-[13px] font-medium flex items-center justify-end gap-1 ml-auto opacity-70 group-hover:opacity-100 transition-opacity">
+                                    View Results
+                                    <span class="material-symbols-outlined text-[16px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 border-t border-outline-variant/30 flex items-center justify-between">
+<span class="font-body-md text-sm text-on-surface-variant">Showing 1 to 4 of 128 entries</span>
+<div class="flex gap-2">
+<button class="btn-ghost px-3 py-1.5 rounded text-sm disabled:opacity-50" disabled="">Previous</button>
+<button class="btn-ghost px-3 py-1.5 rounded text-sm">Next</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CodeSentinel-AI Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed": "#2c0051",
+                      "surface-variant": "#353534",
+                      "on-tertiary-fixed": "#370e00",
+                      "on-tertiary-fixed-variant": "#802a00",
+                      "tertiary-fixed": "#ffdbce",
+                      "surface-tint": "#00dbe9",
+                      "on-background": "#e5e2e1",
+                      "secondary-container": "#7701d0",
+                      "surface-container-low": "#1c1b1b",
+                      "surface-container-lowest": "#0e0e0e",
+                      "secondary": "#dcb8ff",
+                      "surface-container-high": "#2a2a2a",
+                      "tertiary-fixed-dim": "#ffb59a",
+                      "on-tertiary-container": "#a83a00",
+                      "inverse-on-surface": "#313030",
+                      "surface": "#131313",
+                      "secondary-fixed-dim": "#dcb8ff",
+                      "background": "#131313",
+                      "on-surface": "#e5e2e1",
+                      "outline-variant": "#3b494b",
+                      "surface-container-highest": "#353534",
+                      "error-container": "#93000a",
+                      "on-error": "#690005",
+                      "primary-container": "#00f0ff",
+                      "on-error-container": "#ffdad6",
+                      "on-tertiary": "#5a1b00",
+                      "on-primary-container": "#006970",
+                      "on-primary-fixed-variant": "#004f54",
+                      "on-secondary": "#480081",
+                      "error": "#ffb4ab",
+                      "surface-container": "#201f1f",
+                      "surface-bright": "#393939",
+                      "on-primary-fixed": "#002022",
+                      "surface-dim": "#131313",
+                      "primary-fixed": "#7df4ff",
+                      "inverse-surface": "#e5e2e1",
+                      "tertiary": "#fff3f0",
+                      "on-secondary-container": "#dcb7ff",
+                      "on-primary": "#00363a",
+                      "primary-fixed-dim": "#00dbe9",
+                      "secondary-fixed": "#efdbff",
+                      "tertiary-container": "#ffcfbe",
+                      "on-surface-variant": "#b9cacb",
+                      "inverse-primary": "#006970",
+                      "outline": "#849495",
+                      "on-secondary-fixed-variant": "#6700b5",
+                      "primary": "#dbfcff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin": "24px",
+                      "unit": "4px",
+                      "gutter": "16px",
+                      "container-max": "1440px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "Geist"
+                      ],
+                      "body-md": [
+                              "Geist"
+                      ],
+                      "code-md": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg": [
+                              "Geist"
+                      ],
+                      "headline-lg-mobile": [
+                              "Geist"
+                      ],
+                      "body-lg": [
+                              "Geist"
+                      ],
+                      "label-sm": [
+                              "JetBrains Mono"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "code-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "40px",
+                              {
+                                      "lineHeight": "48px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "34px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "11px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body {
+            background-color: #0a0a0a;
+            color: #e5e2e1;
+        }
+        .glass-panel {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(19, 19, 19, 0.4) 100%);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(0, 240, 255, 0.08);
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+        .neon-glow {
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+        .chart-glow {
+            filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.6));
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        
+        .grid-bg {
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.005) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.005) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+    </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden min-h-screen">
+<!-- Atmospheric Shader Background & Grid -->
+<div class="fixed inset-0 w-full h-full -z-30 pointer-events-none" id="threejs-container-ANIMATION_DASHBOARD_BG"></div>
+<div class="fixed inset-0 w-full h-full -z-20 grid-bg pointer-events-none"></div>
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-screen w-[260px] bg-[#131313]/40 backdrop-blur-2xl border-r border-[#00f0ff]/10 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] flex flex-col py-margin z-50">
+<div class="px-margin mb-8">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary truncate">CodeSentinel-AI</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">AI-Driven Security</p>
+</div>
+<ul class="flex flex-col gap-2 flex-grow px-gutter">
+<!-- Active Tab: Dashboard -->
+<li>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-primary dark:text-primary font-bold border-r-2 border-primary bg-primary/10 shadow-[0_0_15px_rgba(0,240,255,0.2)] scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span>Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">code</span>
+<span>Analyze Code</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+<span>Repository Analysis</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">history</span>
+<span>History</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">security</span>
+<span>Vulnerabilities</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">description</span>
+<span>Reports</span>
+</a>
+</li>
+</ul>
+<div class="mt-auto px-gutter flex flex-col gap-2">
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">account_circle</span>
+<span>Profile</span>
+</a>
+</div>
+</nav>
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] h-20 bg-[#131313]/40 backdrop-blur-2xl border-b border-[#00f0ff]/10 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] flex justify-between items-center px-8 ml-[260px] z-40">
+<div class="flex items-center gap-4 w-1/3">
+<div class="relative w-full max-w-md hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-black/40 border border-[#00f0ff]/10 rounded-lg focus:border-primary focus:ring-0 pl-10 py-2 text-sm font-code-md text-on-surface placeholder:text-on-surface-variant transition-colors" placeholder="Search insights..." type="text"/>
+</div>
+</div>
+<div class="font-headline-md text-headline-md font-bold text-on-surface dark:text-on-surface absolute left-1/2 -translate-x-1/2">
+            Dashboard
+        </div>
+<div class="flex items-center gap-3">
+<button class="p-2.5 text-on-surface-variant hover:bg-white/10 rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2.5 text-on-surface-variant hover:bg-white/10 rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">contrast</span>
+</button>
+<div class="w-9 h-9 rounded-full ml-2 overflow-hidden border border-white/20">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A futuristic minimalist avatar placeholder featuring glowing cyan geometric shapes against a deep black void, signifying a high-tech cybersecurity user profile. High contrast, precise edges." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyD0Y7n8cU9GXzYAyzh8CAfSpsChXLXiyGjNQFv363h1jbvtIRjxyNQykOwDLI8KyKov33zWLe3lgRzEYK7k5kxkBCxGY5BRW4PKGGuyP2nMOgolFAt-ACVFdnQWpmOm2lEfza3O5afyQkjBcQ1mFHUJd_PZfq2J7z6RMomP472pauttunmc6fHnRsM9RqcKdB1vcKnabNKHbfG2Kz8N841ttyBduccR4Um1e-GRVpLx4A3oz9SKcWvw"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[260px] mt-20 p-8 min-h-[calc(100vh-5rem)] flex flex-col gap-8 fade-in max-w-[1600px] relative z-10">
+<!-- Welcome Section -->
+<section class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 glass-panel rounded-2xl p-8">
+<div>
+<h2 class="font-headline-lg text-headline-lg font-bold text-white mb-2 tracking-tight">Security Command Center</h2>
+<p class="text-on-surface-variant max-w-2xl text-body-lg">Real-time threat monitoring and AI-driven static analysis of your repositories.</p>
+</div>
+<div class="flex gap-4 mt-4 md:mt-0">
+<button class="px-6 py-2.5 bg-transparent border border-[#00f0ff]/20 text-white rounded-lg hover:bg-white/5 transition-colors font-code-md text-sm">
+                    Analyze Repository
+                </button>
+<button class="px-6 py-2.5 bg-[#00f0ff] text-black rounded-lg hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] transition-all font-code-md text-sm font-semibold">
+                    Analyze Code
+                </button>
+</div>
+</section>
+<!-- Stats Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Stat Card 1 -->
+<div class="glass-panel rounded-2xl p-6 hover:-translate-y-1 transition-all duration-300 shadow-[0_0_20px_rgba(0,240,255,0.1)] relative overflow-hidden group">
+<div class="absolute inset-0 bg-primary-container/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="flex justify-between items-start mb-6 relative z-10">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Security Score</span>
+<span class="material-symbols-outlined text-primary/70">shield</span>
+</div>
+<div class="flex items-end gap-3 relative z-10">
+<span class="text-4xl font-headline-lg font-bold text-white">94.2</span>
+<span class="text-sm font-code-md text-[#00ff9d] mb-1">↑ 4.8%</span>
+</div>
+<div class="w-full bg-black/40 h-1.5 mt-5 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[94%] shadow-[0_0_10px_rgba(0,240,255,0.8)]"></div>
+</div>
+</div>
+<!-- Stat Card 2 -->
+<div class="glass-panel rounded-2xl p-6 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+<div class="flex justify-between items-start mb-6 relative z-10">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Total Analyses</span>
+<span class="material-symbols-outlined text-on-surface-variant">monitoring</span>
+</div>
+<div class="flex items-end gap-3 relative z-10">
+<span class="text-4xl font-headline-lg font-bold text-white">128</span>
+</div>
+</div>
+<!-- Stat Card 3 -->
+<div class="glass-panel rounded-2xl p-6 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+<div class="flex justify-between items-start mb-6 relative z-10">
+<span class="font-label-sm text-label-sm text-[#ffcfbe] uppercase tracking-wider">Vulnerabilities</span>
+<span class="material-symbols-outlined text-[#ffcfbe]">bug_report</span>
+</div>
+<div class="flex items-end gap-3 relative z-10">
+<span class="text-4xl font-headline-lg font-bold text-white">37</span>
+</div>
+</div>
+<!-- Stat Card 4 -->
+<div class="glass-panel rounded-2xl p-6 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden shadow-[0_0_20px_rgba(255,180,171,0.05)]">
+<div class="flex justify-between items-start mb-6 relative z-10">
+<span class="font-label-sm text-label-sm text-[#ffb4ab] uppercase tracking-wider">Critical Issues</span>
+<span class="material-symbols-outlined text-[#ffb4ab] fill-current">warning</span>
+</div>
+<div class="flex items-end gap-3 relative z-10">
+<span class="text-4xl font-headline-lg font-bold text-[#ffb4ab]">4</span>
+<span class="text-xs px-2 py-0.5 bg-[#93000a]/40 text-[#ffdad6] rounded border border-[#93000a] mb-1">Needs Action</span>
+</div>
+</div>
+</section>
+<!-- Middle Row -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Security Overview Chart -->
+<div class="glass-panel rounded-2xl p-8 lg:col-span-2 flex flex-col">
+<div class="flex justify-between items-center mb-8 pb-4 border-b border-white/10">
+<h3 class="font-headline-md text-headline-md font-bold text-white">Security Overview</h3>
+<div class="flex gap-2">
+<button class="px-4 py-1.5 text-xs font-code-md text-on-surface-variant bg-white/5 rounded-md border border-[#00f0ff]/10 hover:text-white transition-colors">7D</button>
+<button class="px-4 py-1.5 text-xs font-code-md text-primary bg-primary/10 rounded-md border border-primary/30">30D</button>
+</div>
+</div>
+<div class="flex-grow relative min-h-[280px] w-full flex items-end">
+<!-- SVG Chart Mockup -->
+<svg class="w-full h-full absolute inset-0 preserve-3d" preserveaspectratio="none" viewbox="0 0 100 40">
+<!-- Grid lines -->
+<line stroke="rgba(255,255,255,0.05)" stroke-width="0.5" x1="0" x2="100" y1="10" y2="10"></line>
+<line stroke="rgba(255,255,255,0.05)" stroke-width="0.5" x1="0" x2="100" y1="20" y2="20"></line>
+<line stroke="rgba(255,255,255,0.05)" stroke-width="0.5" x1="0" x2="100" y1="30" y2="30"></line>
+<!-- Data Line -->
+<path class="chart-glow" d="M0 35 Q 10 30, 20 32 T 40 25 T 60 15 T 80 20 T 100 5" fill="none" stroke="#00dbe9" stroke-width="1.5"></path>
+<!-- Area Under Line -->
+<path d="M0 35 Q 10 30, 20 32 T 40 25 T 60 15 T 80 20 T 100 5 L 100 40 L 0 40 Z" fill="url(#cyanGlowGradient)" opacity="0.2"></path>
+<defs>
+<lineargradient id="cyanGlowGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#00f0ff" stop-opacity="1"></stop>
+<stop offset="100%" stop-color="#00f0ff" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+</svg>
+</div>
+</div>
+<!-- Vulnerability Severity -->
+<div class="glass-panel rounded-2xl p-8 flex flex-col">
+<div class="mb-8 pb-4 border-b border-white/10">
+<h3 class="font-headline-md text-headline-md font-bold text-white">Vulnerability Severity</h3>
+</div>
+<div class="flex-grow flex flex-col justify-center gap-6">
+<!-- Severity Bars -->
+<div>
+<div class="flex justify-between text-sm font-code-md mb-2">
+<span class="text-[#ffb4ab]">Critical</span>
+<span class="text-white">4</span>
+</div>
+<div class="w-full bg-black/40 h-2 rounded-full overflow-hidden border border-[#00f0ff]/5">
+<div class="bg-[#ffb4ab] h-full w-[10%] shadow-[0_0_8px_rgba(255,180,171,0.5)]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-sm font-code-md mb-2">
+<span class="text-[#ffcfbe]">High</span>
+<span class="text-white">12</span>
+</div>
+<div class="w-full bg-black/40 h-2 rounded-full overflow-hidden border border-[#00f0ff]/5">
+<div class="bg-[#ffcfbe] h-full w-[30%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-sm font-code-md mb-2">
+<span class="text-secondary">Medium</span>
+<span class="text-white">18</span>
+</div>
+<div class="w-full bg-black/40 h-2 rounded-full overflow-hidden border border-[#00f0ff]/5">
+<div class="bg-secondary h-full w-[45%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-sm font-code-md mb-2">
+<span class="text-on-surface-variant">Low</span>
+<span class="text-white">3</span>
+</div>
+<div class="w-full bg-black/40 h-2 rounded-full overflow-hidden border border-[#00f0ff]/5">
+<div class="bg-on-surface-variant h-full w-[15%]"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom Row: Recent Analyses -->
+<section class="glass-panel rounded-2xl overflow-hidden">
+<div class="p-8 pb-4 border-b border-white/10 flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md font-bold text-white">Recent Analyses</h3>
+<button class="text-sm font-code-md text-primary hover:text-white transition-colors">View All →</button>
+</div>
+<div class="w-full overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-white/10 text-xs font-label-sm text-on-surface-variant uppercase tracking-wider bg-white/[0.02]">
+<th class="py-5 px-8">Repository</th>
+<th class="py-5 px-8">Language</th>
+<th class="py-5 px-8">Score</th>
+<th class="py-5 px-8">Issues</th>
+<th class="py-5 px-8">Time</th>
+<th class="py-5 px-8">Status</th>
+</tr>
+</thead>
+<tbody class="font-code-md text-sm">
+<tr class="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer group">
+<td class="py-5 px-8 text-white font-medium flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-xl">folder</span>
+                                payment-service
+                            </td>
+<td class="py-5 px-8 text-on-surface-variant">Python</td>
+<td class="py-5 px-8"><span class="text-[#00ff9d]">94</span></td>
+<td class="py-5 px-8"><span class="px-2.5 py-1 rounded-md bg-white/10 text-white text-xs border border-white/5">2</span></td>
+<td class="py-5 px-8 text-on-surface-variant text-xs">Today</td>
+<td class="py-5 px-8">
+<span class="flex items-center gap-2 text-[#00ff9d] text-xs">
+<span class="w-2 h-2 rounded-full bg-[#00ff9d] shadow-[0_0_8px_rgba(0,255,157,0.6)]"></span> Completed
+                                </span>
+</td>
+</tr>
+<tr class="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer group">
+<td class="py-5 px-8 text-white font-medium flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-xl">folder</span>
+                                auth-module
+                            </td>
+<td class="py-5 px-8 text-on-surface-variant">C++</td>
+<td class="py-5 px-8"><span class="text-[#ffcfbe]">81</span></td>
+<td class="py-5 px-8"><span class="px-2.5 py-1 rounded-md bg-[#ffb4ab]/20 border border-[#ffb4ab]/30 text-[#ffb4ab] text-xs">7</span></td>
+<td class="py-5 px-8 text-on-surface-variant text-xs">Yesterday</td>
+<td class="py-5 px-8">
+<span class="flex items-center gap-2 text-[#00ff9d] text-xs">
+<span class="w-2 h-2 rounded-full bg-[#00ff9d] shadow-[0_0_8px_rgba(0,255,157,0.6)]"></span> Completed
+                                </span>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors cursor-pointer group">
+<td class="py-5 px-8 text-white font-medium flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-xl">folder</span>
+                                api-gateway
+                            </td>
+<td class="py-5 px-8 text-on-surface-variant">Java</td>
+<td class="py-5 px-8"><span class="text-[#00ff9d]">91</span></td>
+<td class="py-5 px-8"><span class="px-2.5 py-1 rounded-md bg-white/10 text-white text-xs border border-white/5">3</span></td>
+<td class="py-5 px-8 text-on-surface-variant text-xs">2 days ago</td>
+<td class="py-5 px-8">
+<span class="flex items-center gap-2 text-[#00ff9d] text-xs">
+<span class="w-2 h-2 rounded-full bg-[#00ff9d] shadow-[0_0_8px_rgba(0,255,157,0.6)]"></span> Completed
+                                </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_DASHBOARD_BG') || document.body;
+  
+  let width = container.clientWidth || window.innerWidth;
+  let height = container.clientHeight || window.innerHeight;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+  camera.position.z = 12; // Moved back slightly for wider field of view
+
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio || 1);
+  renderer.setSize(width, height);
+  container.appendChild(renderer.domElement);
+
+  const coreGroup = new THREE.Group();
+  scene.add(coreGroup);
+
+  // Deeply subtle Sentinel Core
+  const innerGeom = new THREE.IcosahedronGeometry(4, 0);
+  const innerMat = new THREE.MeshPhongMaterial({ 
+      color: 0x00F0FF, 
+      emissive: 0x002233,
+      shininess: 50,
+      flatShading: true,
+      transparent: true,
+      opacity: 0.02 // Extremely low opacity
+  });
+  const innerMesh = new THREE.Mesh(innerGeom, innerMat);
+  coreGroup.add(innerMesh);
+
+  // Minimal Wireframe - Reduced density
+  const outerGeom = new THREE.IcosahedronGeometry(7, 0);
+  const outerMat = new THREE.MeshBasicMaterial({ 
+      color: 0x00F0FF, 
+      wireframe: true, 
+      transparent: true, 
+      opacity: 0.015 // Barely visible structure
+  });
+  const outerMesh = new THREE.Mesh(outerGeom, outerMat);
+  coreGroup.add(outerMesh);
+
+  // Background Data Points - More spread out
+  const particlesGeom = new THREE.BufferGeometry();
+  const particlesCount = 600; // Reduced count
+  const posArray = new Float32Array(particlesCount * 3);
+
+  for(let i=0; i < particlesCount * 3; i++) {
+      posArray[i] = (Math.random() - 0.5) * 40; // Wider distribution
+  }
+  particlesGeom.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+  const particlesMat = new THREE.PointsMaterial({
+      size: 0.015,
+      color: 0x00F0FF,
+      transparent: true,
+      opacity: 0.05
+  });
+  const particlesMesh = new THREE.Points(particlesGeom, particlesMat);
+  scene.add(particlesMesh);
+
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+  scene.add(ambientLight);
+
+  const pointLight = new THREE.PointLight(0x00F0FF, 0.5, 100);
+  pointLight.position.set(20, 20, 20);
+  scene.add(pointLight);
+
+  function animate() {
+      requestAnimationFrame(animate);
+      const time = Date.now() * 0.0003;
+      
+      coreGroup.rotation.y += 0.0005; // Slower rotation
+      coreGroup.rotation.z += 0.0002;
+      
+      particlesMesh.rotation.y += 0.0001;
+      
+      renderer.render(scene, camera);
+  }
+
+  function onWindowResize() {
+      const w = container.clientWidth || window.innerWidth;
+      const h = container.clientHeight || window.innerHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+  }
+
+  window.addEventListener('resize', onWindowResize);
+  onWindowResize();
+  animate();
+})();
+</script>
+</body></html>
