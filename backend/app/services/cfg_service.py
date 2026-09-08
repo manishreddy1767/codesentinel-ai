@@ -3,29 +3,28 @@ def build_cfg(root_node):
     Builds a statement-level Control Flow Graph (CFG)
     from a Tree-sitter AST.
 
-    Supported:
+    Current support:
     - Sequential statements
-    - Function entry and exit
-    - return
-    - if
-    - if/else
-    - nested if statements
+    - Return statements
+    - if statements
+    - if/else statements
     - while loops
     - for loops
-    - do-while loops
-    - break
-    - continue
+    - break statements
+    - continue statements
+    - Function entry and exit nodes
     """
 
     nodes = []
     edges = []
+
     node_id = 0
 
-    # ==================================================
-    # NODE AND EDGE HELPERS
-    # ==================================================
-
-    def create_node(ast_node=None, node_type=None, text=""):
+    def create_node(
+        ast_node=None,
+        node_type=None,
+        text="",
+    ):
         """
         Creates a CFG node and returns its ID.
         """
@@ -40,38 +39,47 @@ def build_cfg(root_node):
             start_line = ast_node.start_point[0] + 1
             end_line = ast_node.end_point[0] + 1
 
+            start_byte = ast_node.start_byte
+            end_byte = ast_node.end_byte
+
             node_text = ast_node.text.decode(
                 "utf-8",
                 errors="ignore",
             )
 
-            final_type = node_type or ast_node.type
-
         else:
 
             start_line = None
             end_line = None
+
+            start_byte = None
+            end_byte = None
+
             node_text = text
-            final_type = node_type
 
         nodes.append(
             {
                 "id": current_id,
-                "type": final_type,
+                "type": node_type or (
+                    ast_node.type
+                    if ast_node is not None
+                    else None
+                ),
                 "start_line": start_line,
                 "end_line": end_line,
+                "start_byte": start_byte,
+                "end_byte": end_byte,
                 "text": node_text,
             }
         )
 
         return current_id
 
-
-    def add_edge(source, target, edge_type="CFG"):
-        """
-        Adds an edge to the CFG.
-        """
-
+    def add_edge(
+        source,
+        target,
+        edge_type="CFG",
+    ):
         edges.append(
             {
                 "source": source,
@@ -80,18 +88,11 @@ def build_cfg(root_node):
             }
         )
 
-
-    # ==================================================
-    # AST HELPERS
-    # ==================================================
-
     def get_statements(block_node):
         """
-        Returns CFG-relevant statements from a compound block.
+        Returns statement-like children from
+        a compound block.
         """
-
-        if block_node is None:
-            return []
 
         statement_types = {
             "declaration",
@@ -100,10 +101,10 @@ def build_cfg(root_node):
             "if_statement",
             "while_statement",
             "for_statement",
+            "switch_statement",
             "do_statement",
             "break_statement",
             "continue_statement",
-            "switch_statement",
         }
 
         return [
@@ -112,50 +113,30 @@ def build_cfg(root_node):
             if child.type in statement_types
         ]
 
-
-    # ==================================================
-    # PROCESS STATEMENT LIST
-    # ==================================================
-
     def process_statements(
         statements,
-        incoming_nodes,
+        previous_nodes,
         function_exit,
-        loop_condition=None,
-        loop_exit=None,
+        loop_context=None,
     ):
         """
-        Processes a sequence of statements.
+        Processes statements and returns nodes where
+        normal control flow exits.
 
-        incoming_nodes:
-            CFG nodes that connect into the first statement.
+        loop_context contains:
 
-        loop_condition:
-            Target used by continue statements.
-
-        loop_exit:
-            Target used by break statements.
-
-        Returns:
-            Nodes representing normal exits from the block.
+        {
+            "continue_target": node_id,
+            "break_target": node_id,
+        }
         """
 
-        current_exits = incoming_nodes
+        current_exits = previous_nodes
 
         for statement in statements:
 
-            # No normal path remains.
-            # Example:
-            #
-            # return;
-            # next_statement;
-            #
             if not current_exits:
                 break
-
-            # ----------------------------------------------
-            # IF
-            # ----------------------------------------------
 
             if statement.type == "if_statement":
 
@@ -163,13 +144,8 @@ def build_cfg(root_node):
                     statement,
                     current_exits,
                     function_exit,
-                    loop_condition,
-                    loop_exit,
+                    loop_context,
                 )
-
-            # ----------------------------------------------
-            # WHILE
-            # ----------------------------------------------
 
             elif statement.type == "while_statement":
 
@@ -179,10 +155,6 @@ def build_cfg(root_node):
                     function_exit,
                 )
 
-            # ----------------------------------------------
-            # FOR
-            # ----------------------------------------------
-
             elif statement.type == "for_statement":
 
                 current_exits = process_for_statement(
@@ -191,107 +163,71 @@ def build_cfg(root_node):
                     function_exit,
                 )
 
-            # ----------------------------------------------
-            # DO WHILE
-            # ----------------------------------------------
-
-            elif statement.type == "do_statement":
-
-                current_exits = process_do_statement(
-                    statement,
-                    current_exits,
-                    function_exit,
-                )
-
-            # ----------------------------------------------
-            # BREAK
-            # ----------------------------------------------
-
-            elif statement.type == "break_statement":
-
-                break_id = create_node(
-                    ast_node=statement,
-                    node_type="BREAK",
-                )
-
-                for previous_id in current_exits:
-
-                    add_edge(
-                        previous_id,
-                        break_id,
-                    )
-
-                if loop_exit is not None:
-
-                    add_edge(
-                        break_id,
-                        loop_exit,
-                        "CFG_BREAK",
-                    )
-
-                # break terminates normal flow
-                current_exits = []
-
-            # ----------------------------------------------
-            # CONTINUE
-            # ----------------------------------------------
-
-            elif statement.type == "continue_statement":
-
-                continue_id = create_node(
-                    ast_node=statement,
-                    node_type="CONTINUE",
-                )
-
-                for previous_id in current_exits:
-
-                    add_edge(
-                        previous_id,
-                        continue_id,
-                    )
-
-                if loop_condition is not None:
-
-                    add_edge(
-                        continue_id,
-                        loop_condition,
-                        "CFG_CONTINUE",
-                    )
-
-                # continue terminates normal flow
-                current_exits = []
-
-            # ----------------------------------------------
-            # RETURN
-            # ----------------------------------------------
-
-            elif statement.type == "return_statement":
-
-                return_id = create_node(
-                    ast_node=statement
-                )
-
-                for previous_id in current_exits:
-
-                    add_edge(
-                        previous_id,
-                        return_id,
-                    )
-
-                add_edge(
-                    return_id,
-                    function_exit,
-                    "CFG_RETURN",
-                )
-
-                # return terminates normal flow
-                current_exits = []
-
-            # ----------------------------------------------
-            # NORMAL STATEMENT
-            # ----------------------------------------------
-
             else:
+
+                if statement.type == "break_statement":
+
+                    statement_id = create_node(
+                        ast_node=statement,
+                        node_type="BREAK",
+                    )
+
+                    for previous_id in current_exits:
+                        add_edge(
+                            previous_id,
+                            statement_id,
+                        )
+
+                    if (
+                        loop_context is not None
+                        and loop_context.get(
+                            "break_target"
+                        ) is not None
+                    ):
+
+                        add_edge(
+                            statement_id,
+                            loop_context[
+                                "break_target"
+                            ],
+                            "CFG_BREAK",
+                        )
+
+                    current_exits = []
+
+                    continue
+
+                if statement.type == "continue_statement":
+
+                    statement_id = create_node(
+                        ast_node=statement,
+                        node_type="CONTINUE",
+                    )
+
+                    for previous_id in current_exits:
+                        add_edge(
+                            previous_id,
+                            statement_id,
+                        )
+
+                    if (
+                        loop_context is not None
+                        and loop_context.get(
+                            "continue_target"
+                        ) is not None
+                    ):
+
+                        add_edge(
+                            statement_id,
+                            loop_context[
+                                "continue_target"
+                            ],
+                            "CFG_CONTINUE",
+                        )
+
+                    current_exits = []
+
+                    continue
 
                 statement_id = create_node(
                     ast_node=statement
@@ -304,40 +240,32 @@ def build_cfg(root_node):
                         statement_id,
                     )
 
-                current_exits = [
-                    statement_id
-                ]
+                if statement.type == "return_statement":
+
+                    add_edge(
+                        statement_id,
+                        function_exit,
+                        "CFG_RETURN",
+                    )
+
+                    current_exits = []
+
+                else:
+
+                    current_exits = [
+                        statement_id
+                    ]
 
         return current_exits
 
-
-    # ==================================================
-    # IF / ELSE
-    # ==================================================
-
     def process_if_statement(
         if_node,
-        incoming_nodes,
+        previous_nodes,
         function_exit,
-        loop_condition=None,
-        loop_exit=None,
+        loop_context=None,
     ):
         """
-        Builds CFG for:
-
-        if (condition)
-        {
-            ...
-        }
-
-        if (condition)
-        {
-            ...
-        }
-        else
-        {
-            ...
-        }
+        Builds CFG branching for if and if/else.
         """
 
         condition = if_node.child_by_field_name(
@@ -352,119 +280,108 @@ def build_cfg(root_node):
             "alternative"
         )
 
-        # ----------------------------------------------
-        # CONDITION
-        # ----------------------------------------------
-
         condition_id = create_node(
             ast_node=condition,
             node_type="IF_CONDITION",
         )
 
-        for previous_id in incoming_nodes:
+        for previous_id in previous_nodes:
 
             add_edge(
                 previous_id,
                 condition_id,
             )
 
-        # ----------------------------------------------
-        # MERGE
-        # ----------------------------------------------
-
         merge_id = create_node(
             node_type="IF_MERGE",
             text="",
         )
 
-        # ----------------------------------------------
+        # ----------------------------------------
         # TRUE BRANCH
-        # ----------------------------------------------
+        # ----------------------------------------
 
         true_exits = []
 
         if consequence is not None:
 
-            if consequence.type == "compound_statement":
+            if (
+                consequence.type
+                == "compound_statement"
+            ):
 
-                statements = get_statements(
-                    consequence
+                consequence_statements = (
+                    get_statements(
+                        consequence
+                    )
                 )
 
-                if statements:
+                if consequence_statements:
 
-                    # Recursively process statements
-                    #
-                    # This is the important part that fixes
-                    # nested if/break/continue handling.
-
-                    true_exits = process_statements(
-                        statements,
-                        [condition_id],
-                        function_exit,
-                        loop_condition,
-                        loop_exit,
+                    first_statement = (
+                        consequence_statements[0]
                     )
 
-                    # Mark first edge as TRUE
+                    first_node_id = None
 
-                    if true_exits is not None:
+                    # Process statements
+                    true_exits = (
+                        process_statements(
+                            consequence_statements,
+                            [condition_id],
+                            function_exit,
+                            loop_context,
+                        )
+                    )
 
-                        # Replace the first CFG edge
-                        # from condition to true branch
-                        # with CFG_TRUE.
+                    # Change the first outgoing edge
+                    # from condition to CFG_TRUE
+                    for edge in edges:
 
-                        for edge in edges:
+                        if (
+                            edge["source"]
+                            == condition_id
+                            and edge["type"]
+                            == "CFG"
+                        ):
 
-                            if (
-                                edge["source"] == condition_id
-                                and edge["type"] == "CFG"
-                            ):
+                            edge["type"] = (
+                                "CFG_TRUE"
+                            )
 
-                                edge["type"] = "CFG_TRUE"
-                                break
+                            break
 
                 else:
 
-                    add_edge(
-                        condition_id,
-                        merge_id,
-                        "CFG_TRUE",
-                    )
+                    true_exits = [
+                        condition_id
+                    ]
 
             else:
 
-                consequence_exits = process_statements(
-                    [consequence],
-                    [condition_id],
-                    function_exit,
-                    loop_condition,
-                    loop_exit,
+                consequence_id = create_node(
+                    ast_node=consequence
                 )
 
-                true_exits = consequence_exits
+                add_edge(
+                    condition_id,
+                    consequence_id,
+                    "CFG_TRUE",
+                )
 
-                # Convert condition edge to TRUE
-
-                for edge in edges:
-
-                    if (
-                        edge["source"] == condition_id
-                        and edge["type"] == "CFG"
-                    ):
-
-                        edge["type"] = "CFG_TRUE"
-                        break
+                true_exits = [
+                    consequence_id
+                ]
 
         else:
 
-            add_edge(
-                condition_id,
-                merge_id,
-                "CFG_TRUE",
-            )
+            true_exits = [
+                condition_id
+            ]
 
-        # Connect normal TRUE exits to merge
+        # ----------------------------------------
+        # TRUE -> MERGE
+        # ----------------------------------------
 
         for node in true_exits:
 
@@ -474,165 +391,132 @@ def build_cfg(root_node):
                 "CFG",
             )
 
-        # ----------------------------------------------
+        # ----------------------------------------
         # FALSE BRANCH
-        # ----------------------------------------------
+        # ----------------------------------------
 
         false_exits = []
 
         if alternative is not None:
 
-            # C/C++ Tree-sitter generally stores
-            # else as an else_clause.
+            if (
+                alternative.type
+                == "else_clause"
+            ):
 
-            if alternative.type == "else_clause":
+                alternative_body = None
 
-                else_body = None
+                for child in (
+                    alternative.named_children
+                ):
 
-                for child in alternative.named_children:
+                    if (
+                        child.type
+                        == "compound_statement"
+                    ):
 
-                    if child.type in {
-                        "compound_statement",
-                        "if_statement",
-                        "expression_statement",
-                        "return_statement",
-                        "while_statement",
-                        "for_statement",
-                        "do_statement",
-                        "break_statement",
-                        "continue_statement",
-                    }:
-
-                        else_body = child
+                        alternative_body = child
                         break
 
-                if else_body is not None:
+                    if (
+                        child.type
+                        == "if_statement"
+                    ):
 
-                    # ----------------------------------
-                    # ELSE BLOCK
-                    # ----------------------------------
+                        alternative_body = child
+                        break
 
-                    if else_body.type == "compound_statement":
+                if (
+                    alternative_body is not None
+                    and alternative_body.type
+                    == "compound_statement"
+                ):
 
-                        statements = get_statements(
-                            else_body
+                    alternative_statements = (
+                        get_statements(
+                            alternative_body
                         )
+                    )
 
-                        if statements:
+                    if alternative_statements:
 
-                            false_exits = process_statements(
-                                statements,
+                        false_exits = (
+                            process_statements(
+                                alternative_statements,
                                 [condition_id],
                                 function_exit,
-                                loop_condition,
-                                loop_exit,
+                                loop_context,
                             )
-
-                            # Mark first connection
-                            # as FALSE
-
-                            for edge in edges:
-
-                                if (
-                                    edge["source"] == condition_id
-                                    and edge["type"] == "CFG"
-                                ):
-
-                                    edge["type"] = "CFG_FALSE"
-                                    break
-
-                        else:
-
-                            add_edge(
-                                condition_id,
-                                merge_id,
-                                "CFG_FALSE",
-                            )
-
-                    # ----------------------------------
-                    # ELSE IF
-                    # ----------------------------------
-
-                    elif else_body.type == "if_statement":
-
-                        false_exits = process_if_statement(
-                            else_body,
-                            [condition_id],
-                            function_exit,
-                            loop_condition,
-                            loop_exit,
                         )
-
-                        # Mark edge to nested condition
-                        # as FALSE
 
                         for edge in edges:
 
                             if (
-                                edge["source"] == condition_id
-                                and edge["type"] == "CFG"
+                                edge["source"]
+                                == condition_id
+                                and edge["type"]
+                                == "CFG"
                             ):
 
-                                edge["type"] = "CFG_FALSE"
-                                break
+                                edge["type"] = (
+                                    "CFG_FALSE"
+                                )
 
-                    # ----------------------------------
-                    # ELSE SINGLE STATEMENT
-                    # ----------------------------------
+                                break
 
                     else:
 
-                        false_exits = process_statements(
-                            [else_body],
+                        false_exits = [
+                            condition_id
+                        ]
+
+                elif (
+                    alternative_body is not None
+                    and alternative_body.type
+                    == "if_statement"
+                ):
+
+                    false_exits = (
+                        process_if_statement(
+                            alternative_body,
                             [condition_id],
                             function_exit,
-                            loop_condition,
-                            loop_exit,
+                            loop_context,
                         )
-
-                        for edge in edges:
-
-                            if (
-                                edge["source"] == condition_id
-                                and edge["type"] == "CFG"
-                            ):
-
-                                edge["type"] = "CFG_FALSE"
-                                break
-
-                else:
-
-                    add_edge(
-                        condition_id,
-                        merge_id,
-                        "CFG_FALSE",
                     )
+
+                    for edge in edges:
+
+                        if (
+                            edge["source"]
+                            == condition_id
+                            and edge["type"]
+                            == "CFG"
+                        ):
+
+                            edge["type"] = (
+                                "CFG_FALSE"
+                            )
+
+                            break
 
             else:
 
-                false_exits = process_statements(
-                    [alternative],
-                    [condition_id],
-                    function_exit,
-                    loop_condition,
-                    loop_exit,
+                alternative_id = create_node(
+                    ast_node=alternative
                 )
 
-                for edge in edges:
+                add_edge(
+                    condition_id,
+                    alternative_id,
+                    "CFG_FALSE",
+                )
 
-                    if (
-                        edge["source"] == condition_id
-                        and edge["type"] == "CFG"
-                    ):
-
-                        edge["type"] = "CFG_FALSE"
-                        break
+                false_exits = [
+                    alternative_id
+                ]
 
         else:
-
-            # No ELSE.
-            #
-            # False path directly reaches merge.
 
             add_edge(
                 condition_id,
@@ -640,7 +524,9 @@ def build_cfg(root_node):
                 "CFG_FALSE",
             )
 
-        # Connect normal FALSE exits to merge
+        # ----------------------------------------
+        # FALSE -> MERGE
+        # ----------------------------------------
 
         for node in false_exits:
 
@@ -650,45 +536,17 @@ def build_cfg(root_node):
                 "CFG",
             )
 
-        # ----------------------------------------------
-        # DETERMINE NORMAL EXITS
-        # ----------------------------------------------
-
-        # If both branches terminate
-        # (for example return/break/continue),
-        # there may be no valid path through merge.
-
-        has_true_path = len(true_exits) > 0
-        has_false_path = (
-            alternative is None
-            or len(false_exits) > 0
-        )
-
-        if has_true_path or has_false_path:
-
-            return [
-                merge_id
-            ]
-
-        return []
-
-
-    # ==================================================
-    # WHILE LOOP
-    # ==================================================
+        return [
+            merge_id
+        ]
 
     def process_while_statement(
         while_node,
-        incoming_nodes,
+        previous_nodes,
         function_exit,
     ):
         """
-        Builds CFG for:
-
-        while (condition)
-        {
-            body
-        }
+        Builds CFG for while loops.
         """
 
         condition = while_node.child_by_field_name(
@@ -699,99 +557,75 @@ def build_cfg(root_node):
             "body"
         )
 
-        # ----------------------------------------------
-        # CONDITION
-        # ----------------------------------------------
-
         condition_id = create_node(
             ast_node=condition,
             node_type="WHILE_CONDITION",
         )
 
-        for previous_id in incoming_nodes:
+        loop_exit_id = create_node(
+            node_type="WHILE_EXIT",
+            text="",
+        )
+
+        for previous_id in previous_nodes:
 
             add_edge(
                 previous_id,
                 condition_id,
             )
 
-        # ----------------------------------------------
-        # EXIT
-        # ----------------------------------------------
-
-        exit_id = create_node(
-            node_type="WHILE_EXIT",
-            text="",
-        )
-
-        # ----------------------------------------------
-        # BODY
-        # ----------------------------------------------
+        loop_context = {
+            "continue_target": condition_id,
+            "break_target": loop_exit_id,
+        }
 
         body_exits = []
 
         if body is not None:
 
-            if body.type == "compound_statement":
-
-                statements = get_statements(
-                    body
-                )
-
-                if statements:
-
-                    body_exits = process_statements(
-                        statements,
-                        [condition_id],
-                        function_exit,
-                        condition_id,
-                        exit_id,
-                    )
-
-                    # Convert first condition edge
-                    # into TRUE branch.
-
-                    for edge in edges:
-
-                        if (
-                            edge["source"] == condition_id
-                            and edge["type"] == "CFG"
-                        ):
-
-                            edge["type"] = "CFG_TRUE"
-                            break
-
-                else:
-
-                    add_edge(
-                        condition_id,
-                        condition_id,
-                        "CFG_TRUE",
-                    )
-
-            else:
+            if (
+                body.type
+                == "compound_statement"
+            ):
 
                 body_exits = process_statements(
-                    [body],
+                    get_statements(body),
                     [condition_id],
                     function_exit,
-                    condition_id,
-                    exit_id,
+                    loop_context,
                 )
 
+                # Mark first body edge TRUE
                 for edge in edges:
 
                     if (
-                        edge["source"] == condition_id
-                        and edge["type"] == "CFG"
+                        edge["source"]
+                        == condition_id
+                        and edge["type"]
+                        == "CFG"
                     ):
 
-                        edge["type"] = "CFG_TRUE"
+                        edge["type"] = (
+                            "CFG_TRUE"
+                        )
+
                         break
 
-        # ----------------------------------------------
-        # LOOP BACK
-        # ----------------------------------------------
+            else:
+
+                body_id = create_node(
+                    ast_node=body
+                )
+
+                add_edge(
+                    condition_id,
+                    body_id,
+                    "CFG_TRUE",
+                )
+
+                body_exits = [
+                    body_id
+                ]
 
         for node in body_exits:
 
@@ -801,78 +635,108 @@ def build_cfg(root_node):
                 "CFG_LOOP_BACK",
             )
 
-        # ----------------------------------------------
-        # FALSE PATH
-        # ----------------------------------------------
-
         add_edge(
             condition_id,
-            exit_id,
+            loop_exit_id,
             "CFG_FALSE",
         )
 
         return [
-            exit_id
+            loop_exit_id
         ]
-
-
-    # ==================================================
-    # FOR LOOP
-    # ==================================================
 
     def process_for_statement(
         for_node,
-        incoming_nodes,
+        previous_nodes,
         function_exit,
     ):
         """
-        Builds CFG for a for loop.
+        Builds CFG for for loops.
         """
 
-        body = for_node.child_by_field_name(
-            "body"
+        initializer = (
+            for_node.child_by_field_name(
+                "initializer"
+            )
         )
 
-        condition = for_node.child_by_field_name(
-            "condition"
+        condition = (
+            for_node.child_by_field_name(
+                "condition"
+            )
         )
 
-        update = for_node.child_by_field_name(
-            "update"
+        update = (
+            for_node.child_by_field_name(
+                "update"
+            )
         )
 
-        # ----------------------------------------------
+        body = (
+            for_node.child_by_field_name(
+                "body"
+            )
+        )
+
+        loop_exit_id = create_node(
+            node_type="FOR_EXIT",
+            text="",
+        )
+
+        # ----------------------------------------
+        # INITIALIZER
+        # ----------------------------------------
+
+        if initializer is not None:
+
+            initializer_id = create_node(
+                ast_node=initializer,
+                node_type="FOR_INITIALIZER",
+            )
+
+            for previous_id in previous_nodes:
+
+                add_edge(
+                    previous_id,
+                    initializer_id,
+                )
+
+            current_previous = [
+                initializer_id
+            ]
+
+        else:
+
+            current_previous = previous_nodes
+
+        # ----------------------------------------
         # CONDITION
-        # ----------------------------------------------
+        # ----------------------------------------
 
-        condition_id = create_node(
-            ast_node=condition
-            if condition is not None
-            else for_node,
-            node_type="FOR_CONDITION",
-        )
+        if condition is not None:
 
-        for previous_id in incoming_nodes:
+            condition_id = create_node(
+                ast_node=condition,
+                node_type="FOR_CONDITION",
+            )
+
+        else:
+
+            condition_id = create_node(
+                ast_node=for_node,
+                node_type="FOR_CONDITION",
+            )
+
+        for previous_id in current_previous:
 
             add_edge(
                 previous_id,
                 condition_id,
             )
 
-        # ----------------------------------------------
-        # EXIT
-        # ----------------------------------------------
-
-        exit_id = create_node(
-            node_type="FOR_EXIT",
-            text="",
-        )
-
-        # ----------------------------------------------
-        # UPDATE NODE
-        # ----------------------------------------------
-
-        update_id = None
+        # ----------------------------------------
+        # UPDATE
+        # ----------------------------------------
 
         if update is not None:
 
@@ -881,72 +745,73 @@ def build_cfg(root_node):
                 node_type="FOR_UPDATE",
             )
 
-        # Continue should go to UPDATE
-        # if update exists.
+            continue_target = update_id
 
-        continue_target = (
-            update_id
-            if update_id is not None
-            else condition_id
-        )
+        else:
 
-        # ----------------------------------------------
+            update_id = None
+
+            continue_target = condition_id
+
+        loop_context = {
+            "continue_target": continue_target,
+            "break_target": loop_exit_id,
+        }
+
+        # ----------------------------------------
         # BODY
-        # ----------------------------------------------
+        # ----------------------------------------
 
         body_exits = []
 
         if body is not None:
 
-            if body.type == "compound_statement":
-
-                statements = get_statements(
-                    body
-                )
-
-                if statements:
-
-                    body_exits = process_statements(
-                        statements,
-                        [condition_id],
-                        function_exit,
-                        continue_target,
-                        exit_id,
-                    )
-
-                    for edge in edges:
-
-                        if (
-                            edge["source"] == condition_id
-                            and edge["type"] == "CFG"
-                        ):
-
-                            edge["type"] = "CFG_TRUE"
-                            break
-
-            else:
+            if (
+                body.type
+                == "compound_statement"
+            ):
 
                 body_exits = process_statements(
-                    [body],
+                    get_statements(body),
                     [condition_id],
                     function_exit,
-                    continue_target,
-                    exit_id,
+                    loop_context,
                 )
 
                 for edge in edges:
 
                     if (
-                        edge["source"] == condition_id
-                        and edge["type"] == "CFG"
+                        edge["source"]
+                        == condition_id
+                        and edge["type"]
+                        == "CFG"
                     ):
 
-                        edge["type"] = "CFG_TRUE"
+                        edge["type"] = (
+                            "CFG_TRUE"
+                        )
+
                         break
 
-        # ----------------------------------------------
-        # UPDATE AND LOOP BACK
-        # ----------------------------------------------
+            else:
+
+                body_id = create_node(
+                    ast_node=body
+                )
+
+                add_edge(
+                    condition_id,
+                    body_id,
+                    "CFG_TRUE",
+                )
+
+                body_exits = [
+                    body_id
+                ]
+
+        # ----------------------------------------
+        # BODY -> UPDATE
+        # ----------------------------------------
 
         if update_id is not None:
 
@@ -974,175 +839,19 @@ def build_cfg(root_node):
                     "CFG_LOOP_BACK",
                 )
 
-        # ----------------------------------------------
-        # FALSE PATH
-        # ----------------------------------------------
+        # ----------------------------------------
+        # FALSE -> EXIT
+        # ----------------------------------------
 
         add_edge(
             condition_id,
-            exit_id,
+            loop_exit_id,
             "CFG_FALSE",
         )
 
         return [
-            exit_id
+            loop_exit_id
         ]
-
-
-    # ==================================================
-    # DO-WHILE LOOP
-    # ==================================================
-
-    def process_do_statement(
-        do_node,
-        incoming_nodes,
-        function_exit,
-    ):
-        """
-        Builds CFG for:
-
-        do
-        {
-            body
-        }
-        while (condition);
-        """
-
-        body = do_node.child_by_field_name(
-            "body"
-        )
-
-        condition = do_node.child_by_field_name(
-            "condition"
-        )
-
-        # ----------------------------------------------
-        # EXIT
-        # ----------------------------------------------
-
-        exit_id = create_node(
-            node_type="DO_WHILE_EXIT",
-            text="",
-        )
-
-        # ----------------------------------------------
-        # CONDITION
-        # ----------------------------------------------
-
-        condition_id = create_node(
-            ast_node=condition
-            if condition is not None
-            else do_node,
-            node_type="DO_WHILE_CONDITION",
-        )
-
-        # ----------------------------------------------
-        # BODY
-        # ----------------------------------------------
-
-        body_exits = []
-
-        first_body_nodes = []
-
-        if body is not None:
-
-            if body.type == "compound_statement":
-
-                statements = get_statements(
-                    body
-                )
-
-                if statements:
-
-                    body_exits = process_statements(
-                        statements,
-                        incoming_nodes,
-                        function_exit,
-                        condition_id,
-                        exit_id,
-                    )
-
-                    # Find first node connected
-                    # from incoming nodes.
-
-                    for edge in edges:
-
-                        if (
-                            edge["source"] in incoming_nodes
-                            and edge["type"] == "CFG"
-                        ):
-
-                            first_body_nodes.append(
-                                edge["target"]
-                            )
-
-                            break
-
-            else:
-
-                body_exits = process_statements(
-                    [body],
-                    incoming_nodes,
-                    function_exit,
-                    condition_id,
-                    exit_id,
-                )
-
-                for edge in edges:
-
-                    if (
-                        edge["source"] in incoming_nodes
-                        and edge["type"] == "CFG"
-                    ):
-
-                        first_body_nodes.append(
-                            edge["target"]
-                        )
-
-                        break
-
-        # ----------------------------------------------
-        # BODY → CONDITION
-        # ----------------------------------------------
-
-        for node in body_exits:
-
-            add_edge(
-                node,
-                condition_id,
-                "CFG",
-            )
-
-        # ----------------------------------------------
-        # TRUE → BODY
-        # ----------------------------------------------
-
-        for first_body_id in first_body_nodes:
-
-            add_edge(
-                condition_id,
-                first_body_id,
-                "CFG_TRUE",
-            )
-
-        # ----------------------------------------------
-        # FALSE → EXIT
-        # ----------------------------------------------
-
-        add_edge(
-            condition_id,
-            exit_id,
-            "CFG_FALSE",
-        )
-
-        return [
-            exit_id
-        ]
-
-
-    # ==================================================
-    # FUNCTION PROCESSING
-    # ==================================================
 
     def process_function(function_node):
         """
@@ -1172,21 +881,8 @@ def build_cfg(root_node):
 
             return
 
-        statements = get_statements(
-            body
-        )
-
-        if not statements:
-
-            add_edge(
-                entry_id,
-                exit_id,
-            )
-
-            return
-
         final_exits = process_statements(
-            statements,
+            get_statements(body),
             [entry_id],
             exit_id,
         )
@@ -1196,29 +892,20 @@ def build_cfg(root_node):
             add_edge(
                 node,
                 exit_id,
-                "CFG",
             )
-
-
-    # ==================================================
-    # AST TRAVERSAL
-    # ==================================================
 
     def traverse(node):
         """
-        Finds function definitions.
+        Finds and processes functions.
         """
 
         if node.type == "function_definition":
 
             process_function(node)
 
-            return
-
         for child in node.named_children:
 
             traverse(child)
-
 
     traverse(root_node)
 

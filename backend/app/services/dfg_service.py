@@ -1,21 +1,19 @@
 def build_dfg(root_node):
     """
-    Builds a basic Data Flow Graph (DFG) from a Tree-sitter AST.
+    Builds a basic Data Flow Graph (DFG).
 
-    Current support:
-    - Variable declarations
+    Tracks:
+
     - Variable definitions
-    - Variable assignments
-    - Variable usages
-    - Def-use relationships
-    - Assignment data dependencies
+    - Variable uses
+    - DEF -> USE relationships
 
-    The graph contains:
-    - Nodes representing variable definitions and usages
-    - Edges representing data-flow dependencies
+    Current implementation supports:
 
-    This implementation is designed as the foundation for
-    combining AST + CFG + DFG into a unified Code Property Graph.
+    - Variable declarations
+    - Assignments
+    - Update expressions
+    - Return statements
     """
 
     nodes = []
@@ -23,19 +21,13 @@ def build_dfg(root_node):
 
     node_id = 0
 
-    # Stores the latest definition of each variable.
-    #
-    # Example:
-    #
-    # int x = 10;
-    #
-    # latest_definition["x"] = definition node ID
-    #
+    # Stores the latest definition node
+    # for each variable.
     latest_definition = {}
 
     def create_node(
-        node_type,
         variable,
+        node_type,
         ast_node,
     ):
         """
@@ -47,9 +39,6 @@ def build_dfg(root_node):
         current_id = node_id
         node_id += 1
 
-        start_line = ast_node.start_point[0] + 1
-        end_line = ast_node.end_point[0] + 1
-
         node_text = ast_node.text.decode(
             "utf-8",
             errors="ignore",
@@ -60,8 +49,14 @@ def build_dfg(root_node):
                 "id": current_id,
                 "type": node_type,
                 "variable": variable,
-                "start_line": start_line,
-                "end_line": end_line,
+                "start_line": (
+                    ast_node.start_point[0] + 1
+                ),
+                "end_line": (
+                    ast_node.end_point[0] + 1
+                ),
+                "start_byte": ast_node.start_byte,
+                "end_byte": ast_node.end_byte,
                 "text": node_text,
             }
         )
@@ -71,12 +66,8 @@ def build_dfg(root_node):
     def add_edge(
         source,
         target,
-        edge_type="DFG",
+        edge_type="DEF_USE",
     ):
-        """
-        Adds a data-flow edge.
-        """
-
         edges.append(
             {
                 "source": source,
@@ -85,32 +76,23 @@ def build_dfg(root_node):
             }
         )
 
-    def get_identifier_nodes(node):
+    def extract_identifiers(node):
         """
-        Recursively collects identifier nodes.
-
-        Example:
-
-        x = a + b
-
-        Returns identifiers:
-
-        x
-        a
-        b
+        Returns identifier nodes inside
+        an AST node.
         """
 
         identifiers = []
 
-        def traverse(current_node):
+        def traverse(current):
 
-            if current_node.type == "identifier":
+            if current.type == "identifier":
 
                 identifiers.append(
-                    current_node
+                    current
                 )
 
-            for child in current_node.named_children:
+            for child in current.named_children:
 
                 traverse(child)
 
@@ -118,260 +100,238 @@ def build_dfg(root_node):
 
         return identifiers
 
-    def process_variable_use(
+    def create_use(
         identifier_node,
     ):
         """
-        Creates a USE node for a variable.
-
-        If a previous definition exists,
-        creates a DEF_USE edge.
+        Creates a USE node and connects it
+        to the latest definition.
         """
 
-        variable_name = identifier_node.text.decode(
-            "utf-8",
-            errors="ignore",
+        variable = (
+            identifier_node.text.decode(
+                "utf-8",
+                errors="ignore",
+            )
         )
 
         use_id = create_node(
-            node_type="USE",
-            variable=variable_name,
-            ast_node=identifier_node,
+            variable,
+            "USE",
+            identifier_node,
         )
 
-        if variable_name in latest_definition:
+        if variable in latest_definition:
 
             add_edge(
-                latest_definition[variable_name],
+                latest_definition[
+                    variable
+                ],
                 use_id,
-                "DEF_USE",
             )
 
         return use_id
 
-    def process_declaration(
-        declaration_node,
+    def create_definition(
+        identifier_node,
     ):
         """
-        Processes variable declarations.
-
-        Example:
-
-        int x = 10;
-
-        Creates:
-
-        DEF(x)
+        Creates a DEF node and stores it
+        as the latest definition.
         """
 
-        for declarator in declaration_node.named_children:
-
-            if declarator.type != "init_declarator":
-
-                continue
-
-            variable_node = declarator.child_by_field_name(
-                "declarator"
-            )
-
-            value_node = declarator.child_by_field_name(
-                "value"
-            )
-
-            if variable_node is None:
-
-                continue
-
-            variable_name = variable_node.text.decode(
+        variable = (
+            identifier_node.text.decode(
                 "utf-8",
                 errors="ignore",
             )
+        )
 
-            # Process variables used in the initializer.
-            #
-            # Example:
-            #
-            # int y = x + 1;
-            #
-            # x is a USE.
-            #
-            if value_node is not None:
+        def_id = create_node(
+            variable,
+            "DEF",
+            identifier_node,
+        )
 
-                identifiers = get_identifier_nodes(
-                    value_node
-                )
+        latest_definition[
+            variable
+        ] = def_id
 
-                for identifier in identifiers:
+        return def_id
 
-                    process_variable_use(
-                        identifier
-                    )
-
-            # Create the variable definition.
-            definition_id = create_node(
-                node_type="DEF",
-                variable=variable_name,
-                ast_node=variable_node,
-            )
-
-            latest_definition[
-                variable_name
-            ] = definition_id
-
-    def process_assignment(
-        assignment_node,
-    ):
+    def process_declaration(node):
         """
-        Processes assignments.
+        Handles variable declarations.
 
         Example:
 
-        x = y + 1;
-
-        Data flow:
-
-        previous DEF(y)
-              |
-              v
-             USE(y)
-
-        and:
-
-        DEF(x)
+        int x = y + 1;
         """
 
-        left_node = assignment_node.child_by_field_name(
-            "left"
-        )
+        declarator = None
 
-        right_node = assignment_node.child_by_field_name(
-            "right"
-        )
+        for child in node.named_children:
 
-        if left_node is None:
+            if child.type in {
+                "init_declarator",
+                "identifier",
+            }:
+
+                declarator = child
+                break
+
+        if declarator is None:
 
             return
 
-        # Process variables used on the right side.
-        #
-        # Example:
-        #
-        # x = y + z;
-        #
-        # y and z are USE nodes.
-        #
-        if right_node is not None:
+        if declarator.type == "identifier":
 
-            identifiers = get_identifier_nodes(
-                right_node
+            create_definition(
+                declarator
+            )
+
+            return
+
+        variable_node = None
+
+        value_node = None
+
+        for child in declarator.named_children:
+
+            if child.type == "identifier":
+
+                variable_node = child
+
+            else:
+
+                value_node = child
+
+        # Process uses first
+        #
+        # int y = x + 1;
+        #
+        # x should be a USE before y
+        # becomes a definition.
+
+        if value_node is not None:
+
+            identifiers = (
+                extract_identifiers(
+                    value_node
+                )
             )
 
             for identifier in identifiers:
 
-                process_variable_use(
+                create_use(
                     identifier
                 )
 
-        # Create a new definition for the variable
-        # on the left side.
-        #
-        # Example:
-        #
-        # x = y;
-        #
-        # Creates a new DEF(x).
-        #
-        if left_node.type == "identifier":
+        if variable_node is not None:
 
-            variable_name = left_node.text.decode(
-                "utf-8",
-                errors="ignore",
+            create_definition(
+                variable_node
             )
 
-            definition_id = create_node(
-                node_type="DEF",
-                variable=variable_name,
-                ast_node=left_node,
-            )
-
-            latest_definition[
-                variable_name
-            ] = definition_id
-
-    def process_update_expression(
-        update_node,
-    ):
+    def process_assignment(node):
         """
-        Processes increment and decrement expressions.
+        Handles assignment expressions.
 
-        Examples:
+        Example:
+
+        x = y + 1;
+        """
+
+        left = (
+            node.child_by_field_name(
+                "left"
+            )
+        )
+
+        right = (
+            node.child_by_field_name(
+                "right"
+            )
+        )
+
+        if left is None:
+
+            return
+
+        # ----------------------------------
+        # Process RHS uses
+        # ----------------------------------
+
+        if right is not None:
+
+            identifiers = (
+                extract_identifiers(
+                    right
+                )
+            )
+
+            for identifier in identifiers:
+
+                create_use(
+                    identifier
+                )
+
+        # ----------------------------------
+        # Process LHS definition
+        # ----------------------------------
+
+        if left.type == "identifier":
+
+            create_definition(
+                left
+            )
+
+    def process_update_expression(node):
+        """
+        Handles:
 
         x++
         x--
         ++x
         --x
 
-        These both USE and redefine the variable.
+        These are both a USE and a DEF.
         """
 
-        identifiers = get_identifier_nodes(
-            update_node
+        identifiers = (
+            extract_identifiers(node)
         )
 
         for identifier in identifiers:
 
-            variable_name = identifier.text.decode(
-                "utf-8",
-                errors="ignore",
-            )
-
-            # Previous value is used.
-            process_variable_use(
+            create_use(
                 identifier
             )
 
-            # Then a new definition is created.
-            definition_id = create_node(
-                node_type="DEF",
-                variable=variable_name,
-                ast_node=identifier,
+            create_definition(
+                identifier
             )
 
-            latest_definition[
-                variable_name
-            ] = definition_id
-
-    def process_return_statement(
-        return_node,
-    ):
+    def process_return_statement(node):
         """
-        Processes variables used in return statements.
-
-        Example:
+        Handles:
 
         return x;
-
-        Creates:
-
-        DEF(x) -> USE(x)
         """
 
-        identifiers = get_identifier_nodes(
-            return_node
+        identifiers = (
+            extract_identifiers(node)
         )
 
         for identifier in identifiers:
 
-            process_variable_use(
+            create_use(
                 identifier
             )
 
-    def process_node(node):
+    def traverse(node):
         """
-        Recursively processes AST nodes.
-
-        Handles important statement types and
-        recursively traverses their children.
+        Traverses AST and builds DFG.
         """
 
         if node.type == "declaration":
@@ -390,9 +350,7 @@ def build_dfg(root_node):
 
             return
 
-        if node.type in {
-            "update_expression",
-        }:
+        if node.type == "update_expression":
 
             process_update_expression(
                 node
@@ -410,11 +368,9 @@ def build_dfg(root_node):
 
         for child in node.named_children:
 
-            process_node(
-                child
-            )
+            traverse(child)
 
-    process_node(root_node)
+    traverse(root_node)
 
     return {
         "nodes": nodes,

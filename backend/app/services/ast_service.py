@@ -1,19 +1,12 @@
 def build_ast_graph(root_node):
     """
-    Converts a Tree-sitter AST into a graph representation.
-
-    Returns:
-        {
-            "nodes": [...],
-            "edges": [...]
-        }
-
-    Node IDs are generated during a single traversal so
-    every AST edge consistently references the correct nodes.
+    Builds an Abstract Syntax Tree (AST) graph from a
+    Tree-sitter root node.
     """
 
     nodes = []
     edges = []
+
     node_id = 0
 
     def traverse(node, parent_id=None):
@@ -22,6 +15,11 @@ def build_ast_graph(root_node):
         current_id = node_id
         node_id += 1
 
+        node_text = node.text.decode(
+            "utf-8",
+            errors="ignore",
+        )
+
         nodes.append(
             {
                 "id": current_id,
@@ -29,10 +27,9 @@ def build_ast_graph(root_node):
                 "parent_id": parent_id,
                 "start_line": node.start_point[0] + 1,
                 "end_line": node.end_point[0] + 1,
-                "text": node.text.decode(
-                    "utf-8",
-                    errors="ignore",
-                ),
+                "start_byte": node.start_byte,
+                "end_byte": node.end_byte,
+                "text": node_text,
             }
         )
 
@@ -50,6 +47,8 @@ def build_ast_graph(root_node):
                 child,
                 current_id,
             )
+
+        return current_id
 
     traverse(root_node)
 

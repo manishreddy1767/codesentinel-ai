@@ -1,28 +1,49 @@
-LANGUAGE_ALIASES = {
-    "c": "c",
-    "c99": "c",
-    "c11": "c",
+def detect_language(code: str) -> str:
+    """
+    Detect the programming language from source code.
 
-    "cpp": "cpp",
-    "c++": "cpp",
-    "cxx": "cpp",
-    "cc": "cpp",
-}
+    Currently supports basic detection for C++,
+    Python, Java, and JavaScript.
+    """
 
+    code = code.strip()
 
-SUPPORTED_LANGUAGES = {"c", "cpp"}
+    if not code:
+        return "unknown"
 
+    # Python
+    if (
+        "def " in code
+        or "import " in code
+        or "print(" in code
+        or "elif " in code
+    ):
+        return "python"
 
-def normalize_language(language: str) -> str:
-    normalized = language.strip().lower()
+    # Java
+    if (
+        "public class " in code
+        or "private class " in code
+        or "System.out.println" in code
+    ):
+        return "java"
 
-    if normalized in LANGUAGE_ALIASES:
-        normalized = LANGUAGE_ALIASES[normalized]
+    # JavaScript
+    if (
+        "console.log" in code
+        or "function " in code
+        or "const " in code
+        or "let " in code
+    ):
+        return "javascript"
 
-    if normalized not in SUPPORTED_LANGUAGES:
-        raise ValueError(
-            f"Unsupported language: {language}. "
-            "Currently supported languages are C and C++."
-        )
+    # C / C++
+    if (
+        "#include" in code
+        or "std::" in code
+        or "int main" in code
+        or "using namespace" in code
+    ):
+        return "cpp"
 
-    return normalized
+    return "unknown"

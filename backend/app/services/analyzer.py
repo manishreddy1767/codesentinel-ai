@@ -1,23 +1,45 @@
-from uuid import uuid4
-
-from app.schemas.request import AnalyzeRequest
-from app.schemas.response import AnalyzeResponse
-from app.services.language_service import normalize_language
-from app.services.parser_service import parse_source_code
+from app.services.language_service import detect_language
+from app.services.parser_service import get_parser
+from app.services.cpg_service import build_cpg
 
 
-def analyze_code(request: AnalyzeRequest) -> AnalyzeResponse:
-    language = normalize_language(request.language)
+def analyze_code(code: str, language: str | None = None):
+    """
+    Main code analysis pipeline.
 
-    parsed_code = parse_source_code(
-        code=request.code,
-        language=language,
+    Steps:
+    1. Detect language if not provided
+    2. Get Tree-sitter parser
+    3. Parse source code
+    4. Build the Code Property Graph (CPG)
+    """
+
+    if not code or not code.strip():
+        raise ValueError("Code cannot be empty.")
+
+    # Detect language automatically if needed
+    if language is None:
+        language = detect_language(code)
+
+    # Get parser
+    parser = get_parser(language)
+
+    if parser is None:
+        raise ValueError(
+            f"Unsupported language: {language}"
+        )
+
+    # Parse source code
+    tree = parser.parse(
+        bytes(code, "utf-8")
     )
 
-    return AnalyzeResponse(
-        analysis_id=str(uuid4()),
-        filename=request.filename,
-        language=language,
-        security_score=100,
-        vulnerabilities=[],
+    # Build Code Property Graph
+    cpg = build_cpg(
+        tree.root_node
     )
+
+    return {
+        "language": language,
+        "cpg": cpg,
+    }

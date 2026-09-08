@@ -1,22 +1,38 @@
 from fastapi import APIRouter, HTTPException
 
 from app.schemas.request import AnalyzeRequest
-from app.schemas.response import AnalyzeResponse
 from app.services.analyzer import analyze_code
 
 
-router = APIRouter(
-    prefix="/api",
-    tags=["Analysis"],
-)
+router = APIRouter()
 
 
-@router.post("/analyze", response_model=AnalyzeResponse)
-async def analyze(request: AnalyzeRequest):
+@router.post("/analyze")
+def analyze(request: AnalyzeRequest):
+    """
+    Analyze source code and generate
+    its Code Property Graph.
+    """
+
     try:
-        return analyze_code(request)
-    except ValueError as exc:
+
+        result = analyze_code(
+            code=request.code,
+            language=request.language,
+        )
+
+        return result
+
+    except ValueError as error:
+
         raise HTTPException(
             status_code=400,
-            detail=str(exc),
-        ) from exc
+            detail=str(error),
+        )
+
+    except Exception as error:
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(error),
+        )
