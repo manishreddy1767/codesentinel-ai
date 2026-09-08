@@ -5,6 +5,8 @@ from app.services.vulnerability_service import detect_vulnerabilities
 from app.services.cpg_vulnerability_service import link_vulnerabilities_to_cpg
 from app.services.taint_service import detect_taint_flows
 from app.services.risk_service import calculate_security_risk
+from app.services.confidence_service import assign_confidence
+from app.services.deduplication_service import deduplicate_vulnerabilities
 
 
 def analyze_code(code: str, language: str | None = None):
@@ -12,13 +14,15 @@ def analyze_code(code: str, language: str | None = None):
     Main CodeSentinel AI analysis pipeline.
 
     Steps:
-    1. Detect programming language
-    2. Parse source code using Tree-sitter
+    1. Detect language
+    2. Parse source code
     3. Build Code Property Graph
     4. Detect rule-based vulnerabilities
-    5. Detect taint flows
-    6. Link vulnerabilities to CPG nodes
-    7. Calculate security risk score
+    5. Detect taint-flow vulnerabilities
+    6. Remove duplicate findings
+    7. Assign confidence scores
+    8. Link vulnerabilities to CPG nodes
+    9. Calculate security risk
     """
 
     if not code or not code.strip():
@@ -46,15 +50,30 @@ def analyze_code(code: str, language: str | None = None):
         tree.root_node
     )
 
-    # Detect rule-based vulnerabilities
-    vulnerabilities = detect_vulnerabilities(code)
+    # Rule-based vulnerability detection
+    vulnerabilities = detect_vulnerabilities(
+        code,
+        language,
+    )
 
-    # Detect taint-flow vulnerabilities
-    taint_vulnerabilities = detect_taint_flows(code)
+    # Taint-flow vulnerability detection
+    taint_vulnerabilities = detect_taint_flows(
+        code,
+        language,
+    )
 
-    # Combine all vulnerabilities
     vulnerabilities.extend(
         taint_vulnerabilities
+    )
+
+    # Remove duplicate findings
+    vulnerabilities = deduplicate_vulnerabilities(
+        vulnerabilities
+    )
+
+    # Assign confidence scores
+    vulnerabilities = assign_confidence(
+        vulnerabilities
     )
 
     # Link vulnerabilities to relevant CPG nodes
@@ -63,33 +82,17 @@ def analyze_code(code: str, language: str | None = None):
         cpg,
     )
 
-    # Existing vulnerability summary
-    vulnerability_summary = {
-        "total": len(vulnerabilities),
-        "severity_counts": {
-            "CRITICAL": sum(
-                1 for v in vulnerabilities
-                if v.get("severity") == "CRITICAL"
-            ),
-            "HIGH": sum(
-                1 for v in vulnerabilities
-                if v.get("severity") == "HIGH"
-            ),
-            "MEDIUM": sum(
-                1 for v in vulnerabilities
-                if v.get("severity") == "MEDIUM"
-            ),
-            "LOW": sum(
-                1 for v in vulnerabilities
-                if v.get("severity") == "LOW"
-            ),
-        },
-    }
-
     # Calculate overall security risk
     security_risk = calculate_security_risk(
         vulnerabilities
     )
+
+    vulnerability_summary = {
+        "total": len(vulnerabilities),
+        "severity_counts": security_risk[
+            "severity_counts"
+        ],
+    }
 
     return {
         "language": language,
