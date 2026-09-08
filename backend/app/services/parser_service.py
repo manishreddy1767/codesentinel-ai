@@ -1,60 +1,134 @@
-import re
+from tree_sitter import Language, Parser
+import tree_sitter_c
+import tree_sitter_cpp
+
+
+def get_parser(language: str) -> Parser:
+    """
+    Returns a Tree-sitter parser for the requested language.
+    """
+
+    parser = Parser()
+
+    if language == "c":
+        parser.language = Language(tree_sitter_c.language())
+
+    elif language == "cpp":
+        parser.language = Language(tree_sitter_cpp.language())
+
+    else:
+        raise ValueError(
+            f"Unsupported parser language: {language}"
+        )
+
+    return parser
 
 
 def validate_source_code(code: str) -> bool:
     """
-    Performs basic validation to ensure source code
-    is not empty or whitespace-only.
+    Ensures that the source code is not empty.
     """
+
     return bool(code and code.strip())
 
 
-def extract_functions(code: str) -> list[str]:
+def get_node_count(node) -> int:
     """
-    Performs basic function-name extraction for C/C++ code.
-
-    This is a temporary parser foundation and will later
-    be replaced or extended with proper AST parsing.
+    Recursively counts all nodes in an AST.
     """
 
-    pattern = re.compile(
-        r"""
-        [\w\s\*]+
-        \s+
-        (\w+)
-        \s*
-        \(
-        [^)]*
-        \)
-        \s*
-        \{
-        """,
-        re.VERBOSE,
-    )
+    count = 1
 
-    return pattern.findall(code)
+    for child in node.children:
+        count += get_node_count(child)
+
+    return count
 
 
-def parse_source_code(code: str, language: str) -> dict:
+def extract_functions(root_node) -> list[str]:
     """
-    Parses source code into a structured representation.
+    Extracts function names from a C/C++ AST.
+    """
 
-    Future versions will include:
-    - AST
-    - CFG
-    - DFG
-    - Code Property Graph
+    functions = []
+
+    def traverse(node):
+        if node.type == "function_definition":
+
+            declarator = node.child_by_field_name(
+                "declarator"
+            )
+
+            if declarator:
+                function_name = find_identifier(
+                    declarator
+                )
+
+                if function_name:
+                    functions.append(function_name)
+
+        for child in node.children:
+            traverse(child)
+
+    traverse(root_node)
+
+    return functions
+
+
+def find_identifier(node) -> str | None:
+    """
+    Finds the identifier representing a function name.
+    """
+
+    if node.type == "identifier":
+        return node.text.decode("utf-8")
+
+    for child in node.children:
+        result = find_identifier(child)
+
+        if result:
+            return result
+
+    return None
+
+
+def parse_source_code(
+    code: str,
+    language: str,
+) -> dict:
+    """
+    Parses C/C++ source code using Tree-sitter
+    and returns structured AST information.
     """
 
     if not validate_source_code(code):
-        raise ValueError("Source code cannot be empty.")
+        raise ValueError(
+            "Source code cannot be empty."
+        )
 
-    functions = extract_functions(code)
+    parser = get_parser(language)
+
+    tree = parser.parse(
+        bytes(code, "utf-8")
+    )
+
+    root_node = tree.root_node
+
+    functions = extract_functions(
+        root_node
+    )
 
     return {
         "language": language,
-        "line_count": len(code.splitlines()),
-        "function_count": len(functions),
+        "line_count": len(
+            code.splitlines()
+        ),
+        "function_count": len(
+            functions
+        ),
         "functions": functions,
+        "ast_node_count": get_node_count(
+            root_node
+        ),
+        "has_syntax_error": root_node.has_error,
     }
-
