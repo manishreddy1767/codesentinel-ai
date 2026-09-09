@@ -98,6 +98,27 @@ JAVASCRIPT_TAINT_SOURCE_PATTERNS = [
 
 
 # =========================================================
+# JAVA TAINT SOURCES
+# =========================================================
+
+JAVA_TAINT_SOURCE_PATTERNS = [
+    # String command = request.getParameter("cmd");
+    (
+        r'\b(?:String|Object|var)\s+([A-Za-z_]\w*)\s*='
+        r'\s*request\.getParameter\s*\(',
+        1,
+    ),
+
+    # String command = request.getHeader("...");
+    (
+        r'\b(?:String|Object|var)\s+([A-Za-z_]\w*)\s*='
+        r'\s*request\.getHeader\s*\(',
+        1,
+    ),
+]
+
+
+# =========================================================
 # C / C++ TAINT SINKS
 # =========================================================
 
@@ -326,6 +347,42 @@ JAVASCRIPT_TAINT_SINKS = {
 
 
 # =========================================================
+# JAVA TAINT SINKS
+# =========================================================
+
+JAVA_TAINT_SINKS = {
+
+    "Runtime.getRuntime().exec": {
+        "severity": "CRITICAL",
+        "title": "Potential command injection",
+        "description": (
+            "Tainted input reaches Runtime.exec(), which may allow "
+            "command injection."
+        ),
+        "recommendation": (
+            "Avoid executing commands constructed from untrusted input "
+            "and validate all command arguments."
+        ),
+        "cwe": "CWE-78",
+    },
+
+    "ProcessBuilder": {
+        "severity": "CRITICAL",
+        "title": "Potential command injection",
+        "description": (
+            "Tainted input reaches ProcessBuilder, which may allow "
+            "command injection."
+        ),
+        "recommendation": (
+            "Validate command arguments and avoid constructing "
+            "commands from untrusted input."
+        ),
+        "cwe": "CWE-78",
+    },
+}
+
+
+# =========================================================
 # HELPER FUNCTIONS
 # =========================================================
 
@@ -354,6 +411,9 @@ def get_taint_sinks(language: str | None = None) -> dict:
 
     if language == "javascript":
         return JAVASCRIPT_TAINT_SINKS
+
+    if language == "java":
+        return JAVA_TAINT_SINKS
 
     return CPP_TAINT_SINKS
 
@@ -605,6 +665,35 @@ def detect_taint_flows(
                     sanitized.discard(variable)
 
         # -------------------------------------------------
+        # JAVA TAINT SOURCES
+        # -------------------------------------------------
+
+        elif language == "java":
+
+            # Method arguments are potentially user-controlled.
+            if re.search(
+                r'\bString\[\]\s+args\b',
+                stripped_line,
+            ):
+                tainted.add("args")
+                sanitized.discard("args")
+
+            # String command = request.getParameter(...)
+            for pattern, group in JAVA_TAINT_SOURCE_PATTERNS:
+
+                match = re.search(
+                    pattern,
+                    stripped_line,
+                )
+
+                if match:
+
+                    variable = match.group(group)
+
+                    tainted.add(variable)
+                    sanitized.discard(variable)
+
+        # -------------------------------------------------
         # C / C++ TAINT SOURCES
         # -------------------------------------------------
 
@@ -679,6 +768,14 @@ def detect_taint_flows(
             assignment = re.search(
                 r'\b(?:const|let|var)?\s*'
                 r'([A-Za-z_$]\w*)\s*=\s*(.+)',
+                stripped_line,
+            )
+
+        elif language == "java":
+
+            assignment = re.search(
+                r'\b(?:String|Object|var|int|long|double|float|boolean)?\s*'
+                r'([A-Za-z_]\w*)\s*=\s*(.+)',
                 stripped_line,
             )
 

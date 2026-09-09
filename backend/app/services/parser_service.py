@@ -3,6 +3,7 @@ import tree_sitter_c
 import tree_sitter_cpp
 import tree_sitter_python
 import tree_sitter_javascript
+import tree_sitter_java
 
 
 def get_parser(language: str) -> Parser:
@@ -13,24 +14,19 @@ def get_parser(language: str) -> Parser:
     parser = Parser()
 
     if language == "c":
-        parser.language = Language(
-            tree_sitter_c.language()
-        )
+        parser.language = Language(tree_sitter_c.language())
 
     elif language == "cpp":
-        parser.language = Language(
-            tree_sitter_cpp.language()
-        )
+        parser.language = Language(tree_sitter_cpp.language())
 
     elif language == "python":
-        parser.language = Language(
-            tree_sitter_python.language()
-        )
+        parser.language = Language(tree_sitter_python.language())
 
     elif language == "javascript":
-        parser.language = Language(
-            tree_sitter_javascript.language()
-        )
+        parser.language = Language(tree_sitter_javascript.language())
+
+    elif language == "java":
+        parser.language = Language(tree_sitter_java.language())
 
     else:
         raise ValueError(
@@ -63,55 +59,42 @@ def get_node_count(node) -> int:
 
 def extract_functions(root_node) -> list[str]:
     """
-    Extracts function names from a source code AST.
+    Extracts function names from the AST.
     """
 
     functions = []
 
+    function_node_types = {
+        "function_definition",
+        "function_declaration",
+        "method_declaration",
+    }
+
     def traverse(node):
 
-        if node.type == "function_definition":
+        if node.type in function_node_types:
 
             declarator = node.child_by_field_name(
                 "declarator"
             )
 
             if declarator:
-
                 function_name = find_identifier(
                     declarator
                 )
 
                 if function_name:
+                    functions.append(function_name)
+
+            else:
+                name_node = node.child_by_field_name(
+                    "name"
+                )
+
+                if name_node:
                     functions.append(
-                        function_name
+                        name_node.text.decode("utf-8")
                     )
-
-        elif node.type == "function_declaration":
-
-            name_node = node.child_by_field_name(
-                "name"
-            )
-
-            if name_node:
-                functions.append(
-                    name_node.text.decode(
-                        "utf-8"
-                    )
-                )
-
-        elif node.type == "function":
-
-            name_node = node.child_by_field_name(
-                "name"
-            )
-
-            if name_node:
-                functions.append(
-                    name_node.text.decode(
-                        "utf-8"
-                    )
-                )
 
         for child in node.children:
             traverse(child)
@@ -123,19 +106,15 @@ def extract_functions(root_node) -> list[str]:
 
 def find_identifier(node) -> str | None:
     """
-    Finds the identifier representing a function name.
+    Finds an identifier inside an AST node.
     """
 
     if node.type == "identifier":
-        return node.text.decode(
-            "utf-8"
-        )
+        return node.text.decode("utf-8")
 
     for child in node.children:
 
-        result = find_identifier(
-            child
-        )
+        result = find_identifier(child)
 
         if result:
             return result
