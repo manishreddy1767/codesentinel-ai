@@ -281,6 +281,34 @@ PYTHON_TAINT_SINKS = {
         ),
         "cwe": "CWE-95",
     },
+
+    "execute": {
+        "severity": "CRITICAL",
+        "title": "Potential SQL Injection",
+        "description": (
+            "Tainted input reaches a database execute() call, "
+            "which may allow SQL injection."
+        ),
+        "recommendation": (
+            "Use parameterized queries instead of constructing "
+            "SQL statements with untrusted input."
+        ),
+        "cwe": "CWE-89",
+    },
+
+    "executemany": {
+        "severity": "CRITICAL",
+        "title": "Potential SQL Injection",
+        "description": (
+            "Tainted input reaches a database executemany() call, "
+            "which may allow SQL injection."
+        ),
+        "recommendation": (
+            "Use parameterized queries and avoid dynamically "
+            "constructing SQL statements."
+        ),
+        "cwe": "CWE-89",
+    },
 }
 
 
@@ -343,6 +371,36 @@ JAVASCRIPT_TAINT_SINKS = {
         ),
         "cwe": "CWE-95",
     },
+
+
+    "query": {
+        "severity": "CRITICAL",
+        "title": "Potential SQL Injection",
+        "description": (
+            "Tainted input reaches a database query() call, "
+            "which may allow SQL injection."
+        ),
+        "recommendation": (
+            "Use parameterized queries instead of dynamically "
+            "constructing SQL statements."
+        ),
+        "cwe": "CWE-89",
+    },
+
+    "execute": {
+        "severity": "CRITICAL",
+        "title": "Potential SQL Injection",
+        "description": (
+            "Tainted input reaches a database execute() call, "
+            "which may allow SQL injection."
+        ),
+        "recommendation": (
+            "Use parameterized queries and avoid concatenating "
+            "untrusted input into SQL statements."
+        ),
+        "cwe": "CWE-89",
+    },
+
 }
 
 
@@ -378,6 +436,48 @@ JAVA_TAINT_SINKS = {
             "commands from untrusted input."
         ),
         "cwe": "CWE-78",
+    },
+
+    "executeQuery": {
+        "severity": "CRITICAL",
+        "title": "Potential SQL Injection",
+        "description": (
+            "Tainted input reaches executeQuery(), which may allow "
+            "SQL injection."
+        ),
+        "recommendation": (
+            "Use PreparedStatement with parameterized queries instead "
+            "of dynamically constructing SQL statements."
+        ),
+        "cwe": "CWE-89",
+    },
+
+    "executeUpdate": {
+        "severity": "CRITICAL",
+        "title": "Potential SQL Injection",
+        "description": (
+            "Tainted input reaches executeUpdate(), which may allow "
+            "SQL injection."
+        ),
+        "recommendation": (
+            "Use PreparedStatement with parameterized queries instead "
+            "of dynamically constructing SQL statements."
+        ),
+        "cwe": "CWE-89",
+    },
+
+    "execute": {
+        "severity": "CRITICAL",
+        "title": "Potential SQL Injection",
+        "description": (
+            "Tainted input reaches execute(), which may allow "
+            "SQL injection."
+        ),
+        "recommendation": (
+            "Use PreparedStatement with parameterized queries instead "
+            "of dynamically constructing SQL statements."
+        ),
+        "cwe": "CWE-89",
     },
 }
 
