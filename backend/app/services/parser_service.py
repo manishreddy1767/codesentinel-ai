@@ -1,6 +1,8 @@
 from tree_sitter import Language, Parser
 import tree_sitter_c
 import tree_sitter_cpp
+import tree_sitter_python
+import tree_sitter_javascript
 
 
 def get_parser(language: str) -> Parser:
@@ -11,10 +13,24 @@ def get_parser(language: str) -> Parser:
     parser = Parser()
 
     if language == "c":
-        parser.language = Language(tree_sitter_c.language())
+        parser.language = Language(
+            tree_sitter_c.language()
+        )
 
     elif language == "cpp":
-        parser.language = Language(tree_sitter_cpp.language())
+        parser.language = Language(
+            tree_sitter_cpp.language()
+        )
+
+    elif language == "python":
+        parser.language = Language(
+            tree_sitter_python.language()
+        )
+
+    elif language == "javascript":
+        parser.language = Language(
+            tree_sitter_javascript.language()
+        )
 
     else:
         raise ValueError(
@@ -47,12 +63,13 @@ def get_node_count(node) -> int:
 
 def extract_functions(root_node) -> list[str]:
     """
-    Extracts function names from a C/C++ AST.
+    Extracts function names from a source code AST.
     """
 
     functions = []
 
     def traverse(node):
+
         if node.type == "function_definition":
 
             declarator = node.child_by_field_name(
@@ -60,12 +77,41 @@ def extract_functions(root_node) -> list[str]:
             )
 
             if declarator:
+
                 function_name = find_identifier(
                     declarator
                 )
 
                 if function_name:
-                    functions.append(function_name)
+                    functions.append(
+                        function_name
+                    )
+
+        elif node.type == "function_declaration":
+
+            name_node = node.child_by_field_name(
+                "name"
+            )
+
+            if name_node:
+                functions.append(
+                    name_node.text.decode(
+                        "utf-8"
+                    )
+                )
+
+        elif node.type == "function":
+
+            name_node = node.child_by_field_name(
+                "name"
+            )
+
+            if name_node:
+                functions.append(
+                    name_node.text.decode(
+                        "utf-8"
+                    )
+                )
 
         for child in node.children:
             traverse(child)
@@ -81,10 +127,15 @@ def find_identifier(node) -> str | None:
     """
 
     if node.type == "identifier":
-        return node.text.decode("utf-8")
+        return node.text.decode(
+            "utf-8"
+        )
 
     for child in node.children:
-        result = find_identifier(child)
+
+        result = find_identifier(
+            child
+        )
 
         if result:
             return result
@@ -97,7 +148,7 @@ def parse_source_code(
     language: str,
 ) -> dict:
     """
-    Parses C/C++ source code using Tree-sitter
+    Parses source code using Tree-sitter
     and returns structured AST information.
     """
 
