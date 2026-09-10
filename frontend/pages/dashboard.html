@@ -1,581 +1,893 @@
-<!DOCTYPE html>
-
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>CodeSentinel-AI Dashboard</title>
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>CodeSentinel-AI | Sign In</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;family=Geist:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script id="tailwind-config">
-        tailwind.config = {
-          darkMode: "class",
-          theme: {
-            extend: {
-              "colors": {
-                      "on-secondary-fixed": "#2c0051",
-                      "surface-variant": "#353534",
-                      "on-tertiary-fixed": "#370e00",
-                      "on-tertiary-fixed-variant": "#802a00",
-                      "tertiary-fixed": "#ffdbce",
-                      "surface-tint": "#00dbe9",
-                      "on-background": "#e5e2e1",
-                      "secondary-container": "#7701d0",
-                      "surface-container-low": "#1c1b1b",
-                      "surface-container-lowest": "#0e0e0e",
-                      "secondary": "#dcb8ff",
-                      "surface-container-high": "#2a2a2a",
-                      "tertiary-fixed-dim": "#ffb59a",
-                      "on-tertiary-container": "#a83a00",
-                      "inverse-on-surface": "#313030",
-                      "surface": "#131313",
-                      "secondary-fixed-dim": "#dcb8ff",
-                      "background": "#131313",
-                      "on-surface": "#e5e2e1",
-                      "outline-variant": "#3b494b",
-                      "surface-container-highest": "#353534",
-                      "error-container": "#93000a",
-                      "on-error": "#690005",
-                      "primary-container": "#00f0ff",
-                      "on-error-container": "#ffdad6",
-                      "on-tertiary": "#5a1b00",
-                      "on-primary-container": "#006970",
-                      "on-primary-fixed-variant": "#004f54",
-                      "on-secondary": "#480081",
-                      "error": "#ffb4ab",
-                      "surface-container": "#201f1f",
-                      "surface-bright": "#393939",
-                      "on-primary-fixed": "#002022",
-                      "surface-dim": "#131313",
-                      "primary-fixed": "#7df4ff",
-                      "inverse-surface": "#e5e2e1",
-                      "tertiary": "#fff3f0",
-                      "on-secondary-container": "#dcb7ff",
-                      "on-primary": "#00363a",
-                      "primary-fixed-dim": "#00dbe9",
-                      "secondary-fixed": "#efdbff",
-                      "tertiary-container": "#ffcfbe",
-                      "on-surface-variant": "#b9cacb",
-                      "inverse-primary": "#006970",
-                      "outline": "#849495",
-                      "on-secondary-fixed-variant": "#6700b5",
-                      "primary": "#dbfcff"
-              },
-              "borderRadius": {
-                      "DEFAULT": "0.125rem",
-                      "lg": "0.25rem",
-                      "xl": "0.5rem",
-                      "full": "0.75rem"
-              },
-              "spacing": {
-                      "margin": "24px",
-                      "unit": "4px",
-                      "gutter": "16px",
-                      "container-max": "1440px"
-              },
-              "fontFamily": {
-                      "headline-md": [
-                              "Geist"
-                      ],
-                      "body-md": [
-                              "Geist"
-                      ],
-                      "code-md": [
-                              "JetBrains Mono"
-                      ],
-                      "headline-lg": [
-                              "Geist"
-                      ],
-                      "headline-lg-mobile": [
-                              "Geist"
-                      ],
-                      "body-lg": [
-                              "Geist"
-                      ],
-                      "label-sm": [
-                              "JetBrains Mono"
-                      ]
-              },
-              "fontSize": {
-                      "headline-md": [
-                              "24px",
-                              {
-                                      "lineHeight": "32px",
-                                      "letterSpacing": "-0.01em",
-                                      "fontWeight": "600"
-                              }
-                      ],
-                      "body-md": [
-                              "14px",
-                              {
-                                      "lineHeight": "20px",
-                                      "fontWeight": "400"
-                              }
-                      ],
-                      "code-md": [
-                              "14px",
-                              {
-                                      "lineHeight": "20px",
-                                      "fontWeight": "500"
-                              }
-                      ],
-                      "headline-lg": [
-                              "40px",
-                              {
-                                      "lineHeight": "48px",
-                                      "letterSpacing": "-0.02em",
-                                      "fontWeight": "700"
-                              }
-                      ],
-                      "headline-lg-mobile": [
-                              "28px",
-                              {
-                                      "lineHeight": "34px",
-                                      "fontWeight": "700"
-                              }
-                      ],
-                      "body-lg": [
-                              "16px",
-                              {
-                                      "lineHeight": "24px",
-                                      "fontWeight": "400"
-                              }
-                      ],
-                      "label-sm": [
-                              "11px",
-                              {
-                                      "lineHeight": "16px",
-                                      "letterSpacing": "0.05em",
-                                      "fontWeight": "600"
-                              }
-                      ]
-              }
-      },
-          },
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "surface-container-low": "#1c1b1b",
+                "secondary-fixed-dim": "#dcb8ff",
+                "surface-bright": "#393939",
+                "outline-variant": "#3b494b",
+                "outline": "#849495",
+                "on-surface": "#e5e2e1",
+                "on-primary-container": "#006970",
+                "primary-fixed-dim": "#00dbe9",
+                "tertiary-fixed-dim": "#ffb59a",
+                "on-secondary": "#480081",
+                "on-tertiary-fixed-variant": "#802a00",
+                "primary-fixed": "#7df4ff",
+                "on-tertiary-fixed": "#370e00",
+                "surface": "#131313",
+                "surface-dim": "#131313",
+                "on-primary-fixed-variant": "#004f54",
+                "secondary-container": "#7701d0",
+                "error": "#ffb4ab",
+                "error-container": "#93000a",
+                "on-error-container": "#ffdad6",
+                "secondary-fixed": "#efdbff",
+                "primary-container": "#00f0ff",
+                "on-background": "#e5e2e1",
+                "tertiary-fixed": "#ffdbce",
+                "surface-container": "#201f1f",
+                "on-tertiary": "#5a1b00",
+                "on-secondary-fixed": "#2c0051",
+                "tertiary-container": "#ffcfbe",
+                "on-secondary-container": "#dcb7ff",
+                "on-surface-variant": "#b9cacb",
+                "surface-tint": "#00dbe9",
+                "inverse-surface": "#e5e2e1",
+                "on-primary": "#00363a",
+                "primary": "#dbfcff",
+                "on-error": "#690005",
+                "inverse-on-surface": "#313030",
+                "inverse-primary": "#006970",
+                "on-secondary-fixed-variant": "#6700b5",
+                "on-tertiary-container": "#a83a00",
+                "tertiary": "#fff3f0",
+                "surface-container-highest": "#353534",
+                "on-primary-fixed": "#002022",
+                "surface-container-high": "#2a2a2a",
+                "background": "#131313",
+                "surface-variant": "#353534",
+                "surface-container-lowest": "#0e0e0e",
+                "secondary": "#dcb8ff"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "container-max": "1440px",
+                "unit": "4px",
+                "gutter": "16px",
+                "margin": "24px"
+        },
+        "fontFamily": {
+                "headline-lg-mobile": [
+                        "Geist"
+                ],
+                "headline-md": [
+                        "Geist"
+                ],
+                "label-sm": [
+                        "JetBrains Mono"
+                ],
+                "headline-lg": [
+                        "Geist"
+                ],
+                "body-lg": [
+                        "Geist"
+                ],
+                "body-md": [
+                        "Geist"
+                ],
+                "code-md": [
+                        "JetBrains Mono"
+                ]
+        },
+        "fontSize": {
+                "headline-lg-mobile": [
+                        "28px",
+                        {
+                                "lineHeight": "34px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-sm": [
+                        "11px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg": [
+                        "40px",
+                        {
+                                "lineHeight": "48px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "body-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "code-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "500"
+                        }
+                ]
         }
-      </script>
+},
+    },
+  }
+</script>
 <style>
         body {
-            background-color: #0a0a0a;
+            background-color: #131313;
             color: #e5e2e1;
+            margin: 0;
+            overflow: hidden; 
         }
+        
+        /* Right Side Atmospheric Background */
+        .right-bg {
+            background: radial-gradient(circle at 70% 30%, rgba(0, 240, 255, 0.03) 0%, transparent 50%),
+                        radial-gradient(circle at 30% 70%, rgba(20, 20, 25, 0.8) 0%, #0e0e0e 100%);
+        }
+        
+        /* Right side code traces and particles animation */
+        .code-traces {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 40px;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .particles {
+            position: absolute;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.15;
+            animation: drift 60s linear infinite;
+            z-index: 1;
+        }
+        
+        @keyframes drift {
+            0% { transform: translateY(0) }
+            100% { transform: translateY(-50px) }
+        }
+
+        /* Glass Panel */
         .glass-panel {
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(19, 19, 19, 0.4) 100%);
+            background: rgba(20, 20, 25, 0.4);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(0, 240, 255, 0.08);
-            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
-        .neon-glow {
-            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        
+        .glass-mode .glass-panel {
+             background: rgba(20, 20, 25, 0.2);
+             backdrop-filter: blur(32px);
+             -webkit-backdrop-filter: blur(32px);
         }
-        .chart-glow {
-            filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.6));
+
+        .btn-primary {
+            background-color: #00f0ff;
+            color: #050505;
+            transition: all 0.3s ease;
         }
+        .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #e5e2e1;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255,255,255,0.15);
+        }
+        .input-field {
+            background-color: rgba(10, 10, 12, 0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #e5e2e1;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+        }
+        .input-field:focus {
+            border-color: #00f0ff;
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.15), inset 0 0 0 1px rgba(0, 240, 255, 0.2);
+            outline: none;
+            background-color: rgba(15, 15, 20, 0.8);
+        }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 1s ease-out forwards;
+            opacity: 0;
+        }
+        .slide-up {
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
         
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
             to { opacity: 1; transform: translateY(0); }
         }
-        .fade-in {
-            animation: fadeIn 0.6s ease-out forwards;
-        }
         
-        .grid-bg {
-            background-image: 
-                linear-gradient(to right, rgba(255, 255, 255, 0.005) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255, 255, 255, 0.005) 1px, transparent 1px);
-            background-size: 60px 60px;
+        #glcanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        #threejs-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
         }
     </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style id="codesentinel-three-fix">
+  #threejs-container {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+  }
+
+  #threejs-container canvas {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+  }
+
+  #glcanvas {
+    z-index: 0 !important;
+  }
+</style>
+
+
+<style id="codesentinel-final-glass-fix">
+  /* --- CodeSentinel-AI glass authentication refinement --- */
+  .social-logo {
+    width: 20px !important;
+    height: 20px !important;
+    flex: 0 0 20px;
+    display: block;
+    opacity: 1 !important;
+  }
+
+  .github-logo {
+    color: #f2f2f2;
+  }
+
+  /* Give the whole right authentication zone a blurred atmospheric layer. */
+  .right-bg {
+    position: relative !important;
+    overflow: hidden !important;
+    background:
+      radial-gradient(circle at 78% 20%, rgba(0,240,255,.10), transparent 34%),
+      radial-gradient(circle at 15% 82%, rgba(95,70,150,.09), transparent 38%),
+      linear-gradient(135deg, rgba(18,20,23,.72), rgba(7,8,10,.88)) !important;
+    isolation: isolate;
+  }
+
+  .right-bg::before {
+    content: "";
+    position: absolute;
+    width: 360px;
+    height: 360px;
+    top: 5%;
+    right: -100px;
+    border-radius: 50%;
+    background: rgba(0,240,255,.055);
+    filter: blur(85px);
+    pointer-events: none;
+    z-index: 0;
+    animation: rightAmbientA 12s ease-in-out infinite alternate;
+  }
+
+  .right-bg::after {
+    content: "";
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    bottom: -70px;
+    left: -100px;
+    border-radius: 50%;
+    background: rgba(105,70,170,.055);
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    animation: rightAmbientB 15s ease-in-out infinite alternate;
+  }
+
+  @keyframes rightAmbientA {
+    from { transform: translate3d(0,0,0) scale(1); }
+    to   { transform: translate3d(-25px,20px,0) scale(1.08); }
+  }
+
+  @keyframes rightAmbientB {
+    from { transform: translate3d(0,0,0) scale(1); }
+    to   { transform: translate3d(22px,-18px,0) scale(1.1); }
+  }
+
+  /* The actual login card becomes a premium translucent/frosted surface. */
+  .glass-panel {
+    position: relative !important;
+    background: rgba(18, 21, 24, 0.30) !important;
+    backdrop-filter: blur(42px) saturate(135%) !important;
+    -webkit-backdrop-filter: blur(42px) saturate(135%) !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    box-shadow:
+      0 30px 80px rgba(0,0,0,.58),
+      inset 0 1px 0 rgba(255,255,255,.075),
+      inset 0 0 45px rgba(255,255,255,.018) !important;
+    overflow: hidden;
+    z-index: 10 !important;
+  }
+
+  .glass-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,.045), transparent 30%),
+      linear-gradient(315deg, rgba(0,240,255,.018), transparent 35%);
+    z-index: 0;
+  }
+
+  /* Keep every card child above the glass highlight. */
+  .glass-panel > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .input-field {
+    min-height: 52px !important;
+    border-radius: 12px !important;
+    background: rgba(5,8,11,.38) !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+    transition: border-color .28s ease, box-shadow .28s ease, background .28s ease !important;
+  }
+
+  .input-field:focus {
+    background: rgba(7,12,15,.52) !important;
+    border-color: rgba(0,240,255,.72) !important;
+    box-shadow:
+      0 0 20px rgba(0,240,255,.10),
+      inset 0 0 0 1px rgba(0,240,255,.18) !important;
+  }
+
+  /* Social buttons also receive a subtle glass treatment. */
+  .btn-secondary {
+    background: rgba(255,255,255,.035) !important;
+    border: 1px solid rgba(255,255,255,.09) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 12px !important;
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255,255,255,.065) !important;
+    border-color: rgba(0,240,255,.20) !important;
+  }
+
+  /* Ensure the right-side atmospheric decorations remain behind the card. */
+  .right-bg .code-traces,
+  .right-bg .particles {
+    z-index: 1 !important;
+  }
+</style>
+
+
+<style id="codesentinel-logo-fix">
+  .codesentinel-brand-mark {
+    width: 64px;
+    height: 64px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 64px;
+  }
+
+  .codesentinel-brand-mark img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+  }
+
+  @media (max-width: 1023px) {
+    .codesentinel-brand-mark {
+      width: 48px;
+      height: 48px;
+      flex-basis: 48px;
+    }
+  }
+</style>
+
+
 </head>
-<body class="font-body-md text-body-md overflow-x-hidden min-h-screen">
-<!-- Atmospheric Shader Background & Grid -->
-<div class="fixed inset-0 w-full h-full -z-30 pointer-events-none" id="threejs-container-ANIMATION_DASHBOARD_BG"></div>
-<div class="fixed inset-0 w-full h-full -z-20 grid-bg pointer-events-none"></div>
-<!-- SideNavBar -->
-<nav class="fixed left-0 top-0 h-screen w-[260px] bg-[#131313]/40 backdrop-blur-2xl border-r border-[#00f0ff]/10 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] flex flex-col py-margin z-50">
-<div class="px-margin mb-8">
-<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary truncate">CodeSentinel-AI</h1>
-<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">AI-Driven Security</p>
-</div>
-<ul class="flex flex-col gap-2 flex-grow px-gutter">
-<!-- Active Tab: Dashboard -->
-<li>
-<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-primary dark:text-primary font-bold border-r-2 border-primary bg-primary/10 shadow-[0_0_15px_rgba(0,240,255,0.2)] scale-95 transition-transform duration-200" href="#">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
-<span>Dashboard</span>
-</a>
-</li>
-<li>
-<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
-<span class="material-symbols-outlined">code</span>
-<span>Analyze Code</span>
-</a>
-</li>
-<li>
-<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
-<span class="material-symbols-outlined">account_tree</span>
-<span>Repository Analysis</span>
-</a>
-</li>
-<li>
-<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
-<span class="material-symbols-outlined">history</span>
-<span>History</span>
-</a>
-</li>
-<li>
-<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
-<span class="material-symbols-outlined">security</span>
-<span>Vulnerabilities</span>
-</a>
-</li>
-<li>
-<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
-<span class="material-symbols-outlined">description</span>
-<span>Reports</span>
-</a>
-</li>
-</ul>
-<div class="mt-auto px-gutter flex flex-col gap-2">
-<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
-<span class="material-symbols-outlined">settings</span>
-<span>Settings</span>
-</a>
-<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-white/10 hover:text-primary transition-all duration-300" href="#">
-<span class="material-symbols-outlined">account_circle</span>
-<span>Profile</span>
-</a>
-</div>
-</nav>
-<!-- TopAppBar -->
-<header class="fixed top-0 right-0 w-[calc(100%-260px)] h-20 bg-[#131313]/40 backdrop-blur-2xl border-b border-[#00f0ff]/10 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] flex justify-between items-center px-8 ml-[260px] z-40">
-<div class="flex items-center gap-4 w-1/3">
-<div class="relative w-full max-w-md hidden md:block">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-<input class="w-full bg-black/40 border border-[#00f0ff]/10 rounded-lg focus:border-primary focus:ring-0 pl-10 py-2 text-sm font-code-md text-on-surface placeholder:text-on-surface-variant transition-colors" placeholder="Search insights..." type="text"/>
-</div>
-</div>
-<div class="font-headline-md text-headline-md font-bold text-on-surface dark:text-on-surface absolute left-1/2 -translate-x-1/2">
-            Dashboard
-        </div>
-<div class="flex items-center gap-3">
-<button class="p-2.5 text-on-surface-variant hover:bg-white/10 rounded-full transition-colors flex items-center justify-center">
-<span class="material-symbols-outlined">notifications</span>
-</button>
-<button class="p-2.5 text-on-surface-variant hover:bg-white/10 rounded-full transition-colors flex items-center justify-center">
-<span class="material-symbols-outlined">contrast</span>
-</button>
-<div class="w-9 h-9 rounded-full ml-2 overflow-hidden border border-white/20">
-<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A futuristic minimalist avatar placeholder featuring glowing cyan geometric shapes against a deep black void, signifying a high-tech cybersecurity user profile. High contrast, precise edges." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyD0Y7n8cU9GXzYAyzh8CAfSpsChXLXiyGjNQFv363h1jbvtIRjxyNQykOwDLI8KyKov33zWLe3lgRzEYK7k5kxkBCxGY5BRW4PKGGuyP2nMOgolFAt-ACVFdnQWpmOm2lEfza3O5afyQkjBcQ1mFHUJd_PZfq2J7z6RMomP472pauttunmc6fHnRsM9RqcKdB1vcKnabNKHbfG2Kz8N841ttyBduccR4Um1e-GRVpLx4A3oz9SKcWvw"/>
-</div>
-</div>
-</header>
-<!-- Main Content Canvas -->
-<main class="ml-[260px] mt-20 p-8 min-h-[calc(100vh-5rem)] flex flex-col gap-8 fade-in max-w-[1600px] relative z-10">
-<!-- Welcome Section -->
-<section class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 glass-panel rounded-2xl p-8">
+<body class="font-body-md text-body-md h-screen w-screen flex flex-col lg:flex-row antialiased">
+<!-- Left Side: Immersive Visual (60%) -->
+<div class="hidden lg:flex lg:w-[60%] relative bg-[#050505] overflow-hidden items-center justify-start p-16 xl:p-24">
+<!-- Atmospheric Shader Background -->
+<canvas id="glcanvas" width="768" height="1024"></canvas>
+<!-- Interactive 3D Core -->
+<div id="threejs-container"><canvas width="960" height="1280" style="display: block; width: 768px; height: 1024px;"></canvas></div>
+<!-- Content Overlay -->
+<div class="relative z-20 flex flex-col items-start max-w-xl w-full h-full justify-between slide-up">
 <div>
-<h2 class="font-headline-lg text-headline-lg font-bold text-white mb-2 tracking-tight">Security Command Center</h2>
-<p class="text-on-surface-variant max-w-2xl text-body-lg">Real-time threat monitoring and AI-driven static analysis of your repositories.</p>
-</div>
-<div class="flex gap-4 mt-4 md:mt-0">
-<button class="px-6 py-2.5 bg-transparent border border-[#00f0ff]/20 text-white rounded-lg hover:bg-white/5 transition-colors font-code-md text-sm">
-                    Analyze Repository
-                </button>
-<button class="px-6 py-2.5 bg-[#00f0ff] text-black rounded-lg hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] transition-all font-code-md text-sm font-semibold">
-                    Analyze Code
-                </button>
-</div>
-</section>
-<!-- Stats Grid -->
-<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-<!-- Stat Card 1 -->
-<div class="glass-panel rounded-2xl p-6 hover:-translate-y-1 transition-all duration-300 shadow-[0_0_20px_rgba(0,240,255,0.1)] relative overflow-hidden group">
-<div class="absolute inset-0 bg-primary-container/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-<div class="flex justify-between items-start mb-6 relative z-10">
-<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Security Score</span>
-<span class="material-symbols-outlined text-primary/70">shield</span>
-</div>
-<div class="flex items-end gap-3 relative z-10">
-<span class="text-4xl font-headline-lg font-bold text-white">94.2</span>
-<span class="text-sm font-code-md text-[#00ff9d] mb-1">↑ 4.8%</span>
-</div>
-<div class="w-full bg-black/40 h-1.5 mt-5 rounded-full overflow-hidden">
-<div class="bg-primary h-full w-[94%] shadow-[0_0_10px_rgba(0,240,255,0.8)]"></div>
+<div class="mb-12 flex items-center gap-2">
+<span class="codesentinel-brand-mark" aria-label="CodeSentinel-AI">
+  <img src="assets/d55becab-09a6-4542-b950-713783e72430.png" alt="CodeSentinel-AI Logo">
+</span>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter">CodeSentinel-AI</h1>
 </div>
 </div>
-<!-- Stat Card 2 -->
-<div class="glass-panel rounded-2xl p-6 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-<div class="flex justify-between items-start mb-6 relative z-10">
-<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Total Analyses</span>
-<span class="material-symbols-outlined text-on-surface-variant">monitoring</span>
-</div>
-<div class="flex items-end gap-3 relative z-10">
-<span class="text-4xl font-headline-lg font-bold text-white">128</span>
-</div>
-</div>
-<!-- Stat Card 3 -->
-<div class="glass-panel rounded-2xl p-6 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-<div class="flex justify-between items-start mb-6 relative z-10">
-<span class="font-label-sm text-label-sm text-[#ffcfbe] uppercase tracking-wider">Vulnerabilities</span>
-<span class="material-symbols-outlined text-[#ffcfbe]">bug_report</span>
-</div>
-<div class="flex items-end gap-3 relative z-10">
-<span class="text-4xl font-headline-lg font-bold text-white">37</span>
+<div class="space-y-6 pb-12">
+<h2 class="font-headline-lg text-[64px] leading-[1.1] text-on-background font-bold tracking-tight">
+            Secure.<br>
+            Analyze.<br>
+            Defend.
+        </h2>
+<p class="font-body-lg text-xl text-on-surface-variant max-w-lg opacity-90 leading-relaxed">
+            AI-powered source-code security for the modern developer ecosystem.
+        </p>
 </div>
 </div>
-<!-- Stat Card 4 -->
-<div class="glass-panel rounded-2xl p-6 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden shadow-[0_0_20px_rgba(255,180,171,0.05)]">
-<div class="flex justify-between items-start mb-6 relative z-10">
-<span class="font-label-sm text-label-sm text-[#ffb4ab] uppercase tracking-wider">Critical Issues</span>
-<span class="material-symbols-outlined text-[#ffb4ab] fill-current">warning</span>
 </div>
-<div class="flex items-end gap-3 relative z-10">
-<span class="text-4xl font-headline-lg font-bold text-[#ffb4ab]">4</span>
-<span class="text-xs px-2 py-0.5 bg-[#93000a]/40 text-[#ffdad6] rounded border border-[#93000a] mb-1">Needs Action</span>
+<!-- Right Side: Login Panel (40%) -->
+<div class="flex-1 lg:w-[40%] right-bg relative flex flex-col justify-center items-center p-6 md:p-12 z-20 overflow-hidden glass-mode">
+<!-- Atmospheric Background Elements -->
+<div class="code-traces"></div>
+<div class="particles"></div>
+<!-- Theme Toggle -->
+<button class="absolute top-8 right-8 text-on-surface-variant hover:text-primary transition-colors z-50">
+<span class="material-symbols-outlined text-2xl">light_mode</span>
+</button>
+<div class="w-full max-w-[480px] relative z-10 fade-in delay-200">
+<!-- Mobile Brand Header (Visible only on mobile/tablet) -->
+<div class="lg:hidden flex items-center gap-2 mb-10 justify-center">
+<span class="codesentinel-brand-mark" aria-label="CodeSentinel-AI">
+  <img src="assets/d55becab-09a6-4542-b950-713783e72430.png" alt="CodeSentinel-AI Logo">
+</span>
+<h1 class="font-headline-md text-headline-md text-primary tracking-tight">CodeSentinel-AI</h1>
+</div>
+<!-- Login Glass Panel -->
+<div class="glass-panel rounded-2xl p-8 md:p-12 w-full relative" style="backdrop-filter: blur(48px);">
+<div class="mb-10 text-center">
+<h2 class="font-headline-md text-3xl text-on-background mb-3 tracking-tight">Welcome back</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Sign in to continue your secure code analysis.</p>
+</div>
+<form class="space-y-6">
+<div class="space-y-2">
+<label class="block font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" for="email">Email address</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px]">mail</span>
+<input class="input-field w-full pl-12 pr-4 py-4 font-body-md text-body-md placeholder:text-surface-variant focus:ring-0 bg-black/40" id="email" placeholder="name@company.com" required="" type="email">
 </div>
 </div>
-</section>
-<!-- Middle Row -->
-<section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-<!-- Security Overview Chart -->
-<div class="glass-panel rounded-2xl p-8 lg:col-span-2 flex flex-col">
-<div class="flex justify-between items-center mb-8 pb-4 border-b border-white/10">
-<h3 class="font-headline-md text-headline-md font-bold text-white">Security Overview</h3>
-<div class="flex gap-2">
-<button class="px-4 py-1.5 text-xs font-code-md text-on-surface-variant bg-white/5 rounded-md border border-[#00f0ff]/10 hover:text-white transition-colors">7D</button>
-<button class="px-4 py-1.5 text-xs font-code-md text-primary bg-primary/10 rounded-md border border-primary/30">30D</button>
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="block font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" for="password">Password</label>
+<a class="font-label-sm text-label-sm text-primary hover:text-primary-fixed transition-colors" href="#">Forgot password?</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px]">lock</span>
+<input class="input-field w-full pl-12 pr-12 py-4 font-body-md text-body-md placeholder:text-surface-variant focus:ring-0 bg-black/40" id="password" placeholder="••••••••••••" required="" type="password">
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">visibility_off</span>
+</button>
 </div>
 </div>
-<div class="flex-grow relative min-h-[280px] w-full flex items-end">
-<!-- SVG Chart Mockup -->
-<svg class="w-full h-full absolute inset-0 preserve-3d" preserveaspectratio="none" viewbox="0 0 100 40">
-<!-- Grid lines -->
-<line stroke="rgba(255,255,255,0.05)" stroke-width="0.5" x1="0" x2="100" y1="10" y2="10"></line>
-<line stroke="rgba(255,255,255,0.05)" stroke-width="0.5" x1="0" x2="100" y1="20" y2="20"></line>
-<line stroke="rgba(255,255,255,0.05)" stroke-width="0.5" x1="0" x2="100" y1="30" y2="30"></line>
-<!-- Data Line -->
-<path class="chart-glow" d="M0 35 Q 10 30, 20 32 T 40 25 T 60 15 T 80 20 T 100 5" fill="none" stroke="#00dbe9" stroke-width="1.5"></path>
-<!-- Area Under Line -->
-<path d="M0 35 Q 10 30, 20 32 T 40 25 T 60 15 T 80 20 T 100 5 L 100 40 L 0 40 Z" fill="url(#cyanGlowGradient)" opacity="0.2"></path>
-<defs>
-<lineargradient id="cyanGlowGradient" x1="0" x2="0" y1="0" y2="1">
-<stop offset="0%" stop-color="#00f0ff" stop-opacity="1"></stop>
-<stop offset="100%" stop-color="#00f0ff" stop-opacity="0"></stop>
-</lineargradient>
-</defs>
+<div class="pt-4 flex flex-col gap-5">
+<button class="btn-primary w-full rounded-xl py-4 font-label-sm text-label-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2" type="submit">
+<span class="">Initialize Session</span>
+<span class="material-symbols-outlined text-[18px]">login</span>
+</button>
+<div class="relative flex items-center py-2">
+<div class="flex-grow border-t border-white/10"></div>
+<span class="flex-shrink-0 mx-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">or</span>
+<div class="flex-grow border-t border-white/10"></div>
+</div>
+<button class="btn-secondary w-full rounded-xl py-3.5 font-label-sm text-label-sm uppercase tracking-wider flex items-center justify-center gap-3" type="button">
+<svg class="social-logo" viewBox="0 0 24 24" aria-hidden="true">
+<path fill="#4285F4" d="M21.35 12.27c0-.73-.07-1.43-.2-2.1H12v3.98h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.27z"/>
+<path fill="#34A853" d="M12 21.5c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.54 0-4.69-1.72-5.46-4.03H3.29v2.53A9.74 9.74 0 0 0 12 21.5z"/>
+<path fill="#FBBC05" d="M6.54 13.58A5.86 5.86 0 0 1 6.23 12c0-.55.11-1.09.31-1.58V7.89H3.29A9.5 9.5 0 0 0 2.25 12c0 1.53.37 2.97 1.04 4.11l3.25-2.53z"/>
+<path fill="#EA4335" d="M12 6.39c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.84 3.49 14.63 2.5 12 2.5a9.74 9.74 0 0 0-8.71 5.39l3.25 2.53C7.31 8.11 9.46 6.39 12 6.39z"/>
 </svg>
+<span class="">Continue with Google</span>
+</button>
+<button class="btn-secondary w-full rounded-xl py-3.5 font-label-sm text-label-sm uppercase tracking-wider flex items-center justify-center gap-3" type="button">
+<svg class="social-logo github-logo" viewBox="0 0 24 24" aria-hidden="true">
+<path fill="currentColor" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.79-.25.79-.56v-2.1c-3.2.7-3.87-1.36-3.87-1.36-.53-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.67 1.25 3.32.96.1-.74.4-1.25.72-1.54-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.19-1.49 3.15-1.18 3.15-1.18.62 1.59.23 2.76.11 3.05.73.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.25 5.69.41.36.77 1.07.77 2.16v3.2c0 .31.21.67.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/>
+</svg>
+<span class="">Continue with GitHub</span>
+</button>
 </div>
+</form>
 </div>
-<!-- Vulnerability Severity -->
-<div class="glass-panel rounded-2xl p-8 flex flex-col">
-<div class="mb-8 pb-4 border-b border-white/10">
-<h3 class="font-headline-md text-headline-md font-bold text-white">Vulnerability Severity</h3>
-</div>
-<div class="flex-grow flex flex-col justify-center gap-6">
-<!-- Severity Bars -->
-<div>
-<div class="flex justify-between text-sm font-code-md mb-2">
-<span class="text-[#ffb4ab]">Critical</span>
-<span class="text-white">4</span>
-</div>
-<div class="w-full bg-black/40 h-2 rounded-full overflow-hidden border border-[#00f0ff]/5">
-<div class="bg-[#ffb4ab] h-full w-[10%] shadow-[0_0_8px_rgba(255,180,171,0.5)]"></div>
-</div>
-</div>
-<div>
-<div class="flex justify-between text-sm font-code-md mb-2">
-<span class="text-[#ffcfbe]">High</span>
-<span class="text-white">12</span>
-</div>
-<div class="w-full bg-black/40 h-2 rounded-full overflow-hidden border border-[#00f0ff]/5">
-<div class="bg-[#ffcfbe] h-full w-[30%]"></div>
-</div>
-</div>
-<div>
-<div class="flex justify-between text-sm font-code-md mb-2">
-<span class="text-secondary">Medium</span>
-<span class="text-white">18</span>
-</div>
-<div class="w-full bg-black/40 h-2 rounded-full overflow-hidden border border-[#00f0ff]/5">
-<div class="bg-secondary h-full w-[45%]"></div>
-</div>
-</div>
-<div>
-<div class="flex justify-between text-sm font-code-md mb-2">
-<span class="text-on-surface-variant">Low</span>
-<span class="text-white">3</span>
-</div>
-<div class="w-full bg-black/40 h-2 rounded-full overflow-hidden border border-[#00f0ff]/5">
-<div class="bg-on-surface-variant h-full w-[15%]"></div>
+<!-- Footer Link -->
+<div class="mt-8 text-center fade-in delay-300">
+<p class="font-body-md text-on-surface-variant relative z-10">
+            New to CodeSentinel-AI? 
+            <a class="text-primary hover:text-primary-fixed font-medium ml-1 transition-colors" href="#">Create Account</a>
+</p>
 </div>
 </div>
 </div>
-</div>
-</section>
-<!-- Bottom Row: Recent Analyses -->
-<section class="glass-panel rounded-2xl overflow-hidden">
-<div class="p-8 pb-4 border-b border-white/10 flex justify-between items-center">
-<h3 class="font-headline-md text-headline-md font-bold text-white">Recent Analyses</h3>
-<button class="text-sm font-code-md text-primary hover:text-white transition-colors">View All →</button>
-</div>
-<div class="w-full overflow-x-auto">
-<table class="w-full text-left border-collapse">
-<thead>
-<tr class="border-b border-white/10 text-xs font-label-sm text-on-surface-variant uppercase tracking-wider bg-white/[0.02]">
-<th class="py-5 px-8">Repository</th>
-<th class="py-5 px-8">Language</th>
-<th class="py-5 px-8">Score</th>
-<th class="py-5 px-8">Issues</th>
-<th class="py-5 px-8">Time</th>
-<th class="py-5 px-8">Status</th>
-</tr>
-</thead>
-<tbody class="font-code-md text-sm">
-<tr class="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer group">
-<td class="py-5 px-8 text-white font-medium flex items-center gap-3">
-<span class="material-symbols-outlined text-primary text-xl">folder</span>
-                                payment-service
-                            </td>
-<td class="py-5 px-8 text-on-surface-variant">Python</td>
-<td class="py-5 px-8"><span class="text-[#00ff9d]">94</span></td>
-<td class="py-5 px-8"><span class="px-2.5 py-1 rounded-md bg-white/10 text-white text-xs border border-white/5">2</span></td>
-<td class="py-5 px-8 text-on-surface-variant text-xs">Today</td>
-<td class="py-5 px-8">
-<span class="flex items-center gap-2 text-[#00ff9d] text-xs">
-<span class="w-2 h-2 rounded-full bg-[#00ff9d] shadow-[0_0_8px_rgba(0,255,157,0.6)]"></span> Completed
-                                </span>
-</td>
-</tr>
-<tr class="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer group">
-<td class="py-5 px-8 text-white font-medium flex items-center gap-3">
-<span class="material-symbols-outlined text-primary text-xl">folder</span>
-                                auth-module
-                            </td>
-<td class="py-5 px-8 text-on-surface-variant">C++</td>
-<td class="py-5 px-8"><span class="text-[#ffcfbe]">81</span></td>
-<td class="py-5 px-8"><span class="px-2.5 py-1 rounded-md bg-[#ffb4ab]/20 border border-[#ffb4ab]/30 text-[#ffb4ab] text-xs">7</span></td>
-<td class="py-5 px-8 text-on-surface-variant text-xs">Yesterday</td>
-<td class="py-5 px-8">
-<span class="flex items-center gap-2 text-[#00ff9d] text-xs">
-<span class="w-2 h-2 rounded-full bg-[#00ff9d] shadow-[0_0_8px_rgba(0,255,157,0.6)]"></span> Completed
-                                </span>
-</td>
-</tr>
-<tr class="hover:bg-white/5 transition-colors cursor-pointer group">
-<td class="py-5 px-8 text-white font-medium flex items-center gap-3">
-<span class="material-symbols-outlined text-primary text-xl">folder</span>
-                                api-gateway
-                            </td>
-<td class="py-5 px-8 text-on-surface-variant">Java</td>
-<td class="py-5 px-8"><span class="text-[#00ff9d]">91</span></td>
-<td class="py-5 px-8"><span class="px-2.5 py-1 rounded-md bg-white/10 text-white text-xs border border-white/5">3</span></td>
-<td class="py-5 px-8 text-on-surface-variant text-xs">2 days ago</td>
-<td class="py-5 px-8">
-<span class="flex items-center gap-2 text-[#00ff9d] text-xs">
-<span class="w-2 h-2 rounded-full bg-[#00ff9d] shadow-[0_0_8px_rgba(0,255,157,0.6)]"></span> Completed
-                                </span>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-</main>
+<!-- Shader Script -->
 <script>
-(function() {
-  const container = document.getElementById('threejs-container-ANIMATION_DASHBOARD_BG') || document.body;
-  
-  let width = container.clientWidth || window.innerWidth;
-  let height = container.clientHeight || window.innerHeight;
+    const canvas = document.getElementById('glcanvas');
+    if (canvas) {
+        const gl = canvas.getContext('webgl');
+        
+        if (gl) {
+            const vsSource = `
+                attribute vec4 aVertexPosition;
+                attribute vec2 aTextureCoord;
+                varying highp vec2 v_texCoord;
+                void main(void) {
+                    gl_Position = aVertexPosition;
+                    v_texCoord = aTextureCoord;
+                }
+            `;
+            
+            const fsSource = `
+                precision highp float;
+                varying vec2 v_texCoord;
+                uniform float u_time;
+                uniform vec2 u_resolution;
 
+                float hash(vec2 p) {
+                    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+                }
+
+                void main() {
+                    vec2 uv = v_texCoord;
+                    vec2 st = uv * vec2(u_resolution.x/u_resolution.y, 1.0);
+                    
+                    vec3 color = vec3(0.015, 0.015, 0.02); // Deep obsidian base
+                    
+                    // Subtle scanning line
+                    float scan = smoothstep(0.4, 0.5, sin(uv.y * 2.0 - u_time * 0.5)) * 
+                                 smoothstep(0.6, 0.5, sin(uv.y * 2.0 - u_time * 0.5));
+                    color += vec3(0.0, 0.1, 0.15) * scan * 0.2;
+                    
+                    // Faint grid
+                    vec2 grid = fract(st * 40.0);
+                    float lines = step(0.98, grid.x) + step(0.98, grid.y);
+                    color += vec3(0.0, 0.94, 1.0) * lines * 0.03;
+                    
+                    gl_FragColor = vec4(color, 1.0);
+                }
+            `;
+            
+            function initShaderProgram(gl, vsSource, fsSource) {
+                const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+                const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+                const shaderProgram = gl.createProgram();
+                gl.attachShader(shaderProgram, vertexShader);
+                gl.attachShader(shaderProgram, fragmentShader);
+                gl.linkProgram(shaderProgram);
+                return shaderProgram;
+            }
+            
+            function loadShader(gl, type, source) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                return shader;
+            }
+            
+            const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+            const programInfo = {
+                program: shaderProgram,
+                attribLocations: {
+                    vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+                    textureCoord: gl.getAttribLocation(shaderProgram, 'aTextureCoord'),
+                },
+                uniformLocations: {
+                    time: gl.getUniformLocation(shaderProgram, 'u_time'),
+                    resolution: gl.getUniformLocation(shaderProgram, 'u_resolution'),
+                },
+            };
+            
+            const positions = [
+                -1.0,  1.0,
+                 1.0,  1.0,
+                -1.0, -1.0,
+                 1.0, -1.0,
+            ];
+            
+            const texCoords = [
+                0.0, 0.0,
+                1.0, 0.0,
+                0.0, 1.0,
+                1.0, 1.0,
+            ];
+            
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+            
+            const texCoordBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texCoords), gl.STATIC_DRAW);
+            
+            function resize() {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+            window.addEventListener('resize', resize);
+            resize();
+            
+            let startTime = Date.now();
+            
+            function render() {
+                gl.clearColor(0.0, 0.0, 0.0, 1.0);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                
+                gl.useProgram(programInfo.program);
+                
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+                
+                gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+                gl.vertexAttribPointer(programInfo.attribLocations.textureCoord, 2, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord);
+                
+                gl.uniform1f(programInfo.uniformLocations.time, (Date.now() - startTime) * 0.001);
+                gl.uniform2f(programInfo.uniformLocations.resolution, canvas.width, canvas.height);
+                
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+                
+                requestAnimationFrame(render);
+            }
+            render();
+        }
+    }
+</script>
+<!-- Three.js Script -->
+<script>
+(function () {
+  "use strict";
+
+  const container = document.getElementById("threejs-container");
+
+  if (!container || typeof THREE === "undefined") {
+    console.error("CodeSentinel-AI: Three.js failed to initialize.");
+    return;
+  }
+
+  // Avoid duplicate animation instances during hot reloads.
+  if (container.dataset.threeInitialized === "true") return;
+  container.dataset.threeInitialized = "true";
+
+  // Scene
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-  camera.position.z = 12; // Moved back slightly for wider field of view
 
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-  renderer.setPixelRatio(window.devicePixelRatio || 1);
-  renderer.setSize(width, height);
+  // Camera
+  const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
+  camera.position.set(0, 0, 6);
+  camera.lookAt(0, 0, 0);
+
+  // Renderer
+  const renderer = new THREE.WebGLRenderer({
+    alpha: true,
+    antialias: true,
+    powerPreference: "high-performance"
+  });
+
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x000000, 0);
+
+  renderer.domElement.style.position = "absolute";
+  renderer.domElement.style.inset = "0";
+  renderer.domElement.style.width = "100%";
+  renderer.domElement.style.height = "100%";
+  renderer.domElement.style.display = "block";
+  renderer.domElement.style.pointerEvents = "none";
+
   container.appendChild(renderer.domElement);
 
+  // Sentinel Core
   const coreGroup = new THREE.Group();
+  coreGroup.position.set(0.15, -0.05, 0);
   scene.add(coreGroup);
 
-  // Deeply subtle Sentinel Core
-  const innerGeom = new THREE.IcosahedronGeometry(4, 0);
-  const innerMat = new THREE.MeshPhongMaterial({ 
-      color: 0x00F0FF, 
-      emissive: 0x002233,
-      shininess: 50,
-      flatShading: true,
-      transparent: true,
-      opacity: 0.02 // Extremely low opacity
+  const innerGeometry = new THREE.IcosahedronGeometry(1.15, 1);
+
+  const innerMaterial = new THREE.MeshPhongMaterial({
+    color: 0x00f0ff,
+    emissive: 0x004b5a,
+    emissiveIntensity: 1.15,
+    shininess: 100,
+    flatShading: true,
+    transparent: true,
+    opacity: 0.94
   });
-  const innerMesh = new THREE.Mesh(innerGeom, innerMat);
+
+  const innerMesh = new THREE.Mesh(innerGeometry, innerMaterial);
   coreGroup.add(innerMesh);
 
-  // Minimal Wireframe - Reduced density
-  const outerGeom = new THREE.IcosahedronGeometry(7, 0);
-  const outerMat = new THREE.MeshBasicMaterial({ 
-      color: 0x00F0FF, 
-      wireframe: true, 
-      transparent: true, 
-      opacity: 0.015 // Barely visible structure
+  // Outer wireframe shell
+  const outerGeometry = new THREE.IcosahedronGeometry(1.78, 1);
+
+  const outerMaterial = new THREE.MeshBasicMaterial({
+    color: 0x00f0ff,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.30,
+    depthWrite: false
   });
-  const outerMesh = new THREE.Mesh(outerGeom, outerMat);
+
+  const outerMesh = new THREE.Mesh(outerGeometry, outerMaterial);
   coreGroup.add(outerMesh);
 
-  // Background Data Points - More spread out
-  const particlesGeom = new THREE.BufferGeometry();
-  const particlesCount = 600; // Reduced count
-  const posArray = new Float32Array(particlesCount * 3);
+  // Particle field
+  const particleCount = 800;
+  const positions = new Float32Array(particleCount * 3);
 
-  for(let i=0; i < particlesCount * 3; i++) {
-      posArray[i] = (Math.random() - 0.5) * 40; // Wider distribution
+  for (let i = 0; i < particleCount; i++) {
+    const i3 = i * 3;
+
+    positions[i3] = (Math.random() - 0.5) * 12;
+    positions[i3 + 1] = (Math.random() - 0.5) * 8;
+    positions[i3 + 2] = (Math.random() - 0.5) * 8;
   }
-  particlesGeom.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-  const particlesMat = new THREE.PointsMaterial({
-      size: 0.015,
-      color: 0x00F0FF,
-      transparent: true,
-      opacity: 0.05
+
+  const particlesGeometry = new THREE.BufferGeometry();
+
+  particlesGeometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(positions, 3)
+  );
+
+  const particlesMaterial = new THREE.PointsMaterial({
+    color: 0x00f0ff,
+    size: 0.025,
+    transparent: true,
+    opacity: 0.55,
+    depthWrite: false
   });
-  const particlesMesh = new THREE.Points(particlesGeom, particlesMat);
-  scene.add(particlesMesh);
 
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
-  scene.add(ambientLight);
+  const particles = new THREE.Points(
+    particlesGeometry,
+    particlesMaterial
+  );
 
-  const pointLight = new THREE.PointLight(0x00F0FF, 0.5, 100);
-  pointLight.position.set(20, 20, 20);
-  scene.add(pointLight);
+  scene.add(particles);
+
+  // Lighting
+  scene.add(new THREE.AmbientLight(0xffffff, 0.62));
+
+  const cyanLight = new THREE.PointLight(0x00f0ff, 2.5, 40);
+  cyanLight.position.set(4, 4, 6);
+  scene.add(cyanLight);
+
+  const secondaryLight = new THREE.PointLight(0x00aabb, 1.25, 30);
+  secondaryLight.position.set(-4, -3, 4);
+  scene.add(secondaryLight);
+
+  // Resize using the actual left visual panel.
+  function resize() {
+    const width = Math.max(container.clientWidth, 1);
+    const height = Math.max(container.clientHeight, 1);
+
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(width, height, false);
+  }
+
+  // Smooth animation
+  const clock = new THREE.Clock();
 
   function animate() {
-      requestAnimationFrame(animate);
-      const time = Date.now() * 0.0003;
-      
-      coreGroup.rotation.y += 0.0005; // Slower rotation
-      coreGroup.rotation.z += 0.0002;
-      
-      particlesMesh.rotation.y += 0.0001;
-      
-      renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+
+    const time = clock.getElapsedTime();
+
+    coreGroup.rotation.y = time * 0.42;
+    coreGroup.rotation.x = Math.sin(time * 0.22) * 0.10;
+
+    outerMesh.rotation.y = -time * 0.20;
+    outerMesh.rotation.z = time * 0.10;
+
+    const pulse = 1 + Math.sin(time * 1.5) * 0.035;
+    innerMesh.scale.setScalar(pulse);
+
+    particles.rotation.y = time * 0.025;
+    particles.rotation.x = Math.sin(time * 0.12) * 0.025;
+
+    cyanLight.position.x = Math.sin(time * 0.35) * 4;
+    cyanLight.position.y = 2 + Math.cos(time * 0.28) * 3;
+
+    renderer.render(scene, camera);
   }
 
-  function onWindowResize() {
-      const w = container.clientWidth || window.innerWidth;
-      const h = container.clientHeight || window.innerHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
+  window.addEventListener("resize", resize, { passive: true });
+
+  if ("ResizeObserver" in window) {
+    const observer = new ResizeObserver(resize);
+    observer.observe(container);
   }
 
-  window.addEventListener('resize', onWindowResize);
-  onWindowResize();
+  resize();
   animate();
 })();
 </script>
+
+
 </body></html>

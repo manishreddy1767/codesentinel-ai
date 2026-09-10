@@ -908,7 +908,9 @@ def detect_taint_flows(
 
         for sanitizer in sanitizers:
 
-            sanitizer_match = re.search(
+            # Direct sanitization:
+            # sanitize(user_input)
+            direct_match = re.search(
                 rf'\b{re.escape(sanitizer)}'
                 r'\s*\(\s*'
                 r'([A-Za-z_$]\w*)'
@@ -916,13 +918,35 @@ def detect_taint_flows(
                 stripped_line,
             )
 
-            if sanitizer_match:
+            if direct_match:
 
-                variable = sanitizer_match.group(1)
+                variable = direct_match.group(1)
 
                 if variable in tainted:
 
                     sanitized.add(variable)
+
+            # Sanitized assignment:
+            # safe_input = sanitize(user_input)
+            assignment_match = re.search(
+                r'\b(?:const|let|var|String|Object)?\s*'
+                r'([A-Za-z_$]\w*)\s*=\s*'
+                + rf'{re.escape(sanitizer)}'
+                + r'\s*\(\s*'
+                r'([A-Za-z_$]\w*)'
+                r'\s*\)',
+                stripped_line,
+            )
+
+            if assignment_match:
+
+                target = assignment_match.group(1)
+                source = assignment_match.group(2)
+
+                if source in tainted:
+
+                    sanitized.add(target)
+                    tainted.discard(target)
 
         # -------------------------------------------------
         # DANGEROUS SINKS

@@ -1,17 +1,25 @@
+from uuid import uuid4
+
 from fastapi import APIRouter, HTTPException
 
 from app.schemas.request import AnalyzeRequest
+from app.schemas.response import AnalyzeResponse
 from app.services.analyzer import analyze_code
 
 
 router = APIRouter()
 
 
-@router.post("/analyze")
+@router.post(
+    "/analyze",
+    response_model=AnalyzeResponse,
+)
 def analyze(request: AnalyzeRequest):
     """
-    Analyze source code and generate
-    its Code Property Graph.
+    Analyze source code for vulnerabilities.
+
+    Returns a compact analysis response suitable
+    for frontend consumption.
     """
 
     try:
@@ -21,7 +29,24 @@ def analyze(request: AnalyzeRequest):
             language=request.language,
         )
 
-        return result
+        return {
+            "analysis_id": str(uuid4()),
+
+            "filename": request.filename,
+
+            "language": result["language"],
+
+            "security_risk": result["security_risk"],
+
+            "vulnerability_summary":
+                result["vulnerability_summary"],
+
+            "vulnerabilities":
+                result["vulnerabilities"],
+
+            "cpg_metadata":
+                result["cpg"]["metadata"],
+        }
 
     except ValueError as error:
 
