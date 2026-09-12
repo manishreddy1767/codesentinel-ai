@@ -1,87 +1,123 @@
-import json
+"""
+CodeBERT token-length profile of the processed splits.
+
+    python -m backend.ml.preprocessing.analyze_token_lengths
+
+Reports how many functions exceed the 512-token limit and how many chunks the
+current chunking settings will produce. Run this before chunking to sanity
+check CODESENTINEL_MAX_CHUNKS.
+"""
+
+import argparse
+import math
 from pathlib import Path
 
-from transformers import AutoTokenizer
+from backend.ml import config
+from backend.ml.utils.io import read_jsonl
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-
-MODEL_NAME = "microsoft/codebert-base"
-
-FILES = {
-    "train": PROJECT_ROOT / "data" / "processed" / "primevul_train_balanced.jsonl",
-    "valid": PROJECT_ROOT / "data" / "processed" / "primevul_valid.jsonl",
-    "test": PROJECT_ROOT / "data" / "processed" / "primevul_test.jsonl",
-}
-
-
-def percentile(values, p):
-    values = sorted(values)
-
-    if not values:
+def percentile(sorted_values, fraction: float):
+    if not sorted_values:
         return 0
 
-    index = int((len(values) - 1) * p)
-    return values[index]
+    index = int(round((len(sorted_values) - 1) * fraction))
+    return sorted_values[index]
 
 
-def analyze_file(name, path, tokenizer):
-    lengths = []
-    truncated_512 = 0
+def expected_chunks(token_count: int) -> int:
+    """Mirror the window arithmetic in chunk_dataset.build_chunks."""
 
+    body = config.MAX_LENGTH - 2
+    overlap = min(config.CHUNK_OVERLAP, body - 1)
+    step = body - overlap
+
+    if token_count <= body:
+        return 1
+
+    return 1 + math.ceil((token_count - body) / step)
+
+
+def analyze_file(name: str, path: Path, tokenizer) -> None:
     print("\n" + "=" * 60)
-    print(f"{name.upper()} DATASET")
+    print(f"{name.upper()} SPLIT")
     print("=" * 60)
 
-    with open(path, "r", encoding="utf-8") as file:
-        for i, line in enumerate(file, start=1):
-            record = json.loads(line)
-            code = record.get("func", "")
+    if not path.exists():
+        print(f"MISSING: {path}")
+        return
 
-            tokens = tokenizer(
-                code,
-                add_special_tokens=True,
-                truncation=False
-            )
+    lengths = []
+    over_limit = 0
+    over_max_chunks = 0
+    total_chunks = 0
 
-            token_length = len(tokens["input_ids"])
-            lengths.append(token_length)
+    for index, (_, record) in enumerate(read_jsonl(path), start=1):
+        # add_special_tokens=False matches how chunk_dataset.py tokenizes.
+        token_count = len(
+            tokenizer(
+                record.get("func", ""),
+                add_special_tokens=False,
+                truncation=False,
+            )["input_ids"]
+        )
 
-            if token_length > 512:
-                truncated_512 += 1
+        lengths.append(token_count)
 
-            if i % 5000 == 0:
-                print(f"Processed {i} samples...")
+        if token_count + 2 > config.MAX_LENGTH:
+            over_limit += 1
+
+        chunks = expected_chunks(token_count)
+        total_chunks += min(chunks, config.MAX_CHUNKS_PER_FUNCTION)
+
+        if chunks > config.MAX_CHUNKS_PER_FUNCTION:
+            over_max_chunks += 1
+
+        if index % 5000 == 0:
+            print(f"  ...{index} samples")
+
+    if not lengths:
+        print("No records.")
+        return
 
     total = len(lengths)
+    lengths.sort()
 
-    print(f"\nSamples: {total}")
-    print(f"Minimum tokens: {min(lengths)}")
-    print(f"Maximum tokens: {max(lengths)}")
-    print(f"Average tokens: {sum(lengths) / total:.2f}")
+    print(f"\nSamples          : {total}")
+    print(f"Minimum tokens   : {lengths[0]}")
+    print(f"Maximum tokens   : {lengths[-1]}")
+    print(f"Average tokens   : {sum(lengths) / total:.2f}")
 
     print("\nToken length percentiles:")
-    print(f"50th percentile: {percentile(lengths, 0.50)}")
-    print(f"75th percentile: {percentile(lengths, 0.75)}")
-    print(f"90th percentile: {percentile(lengths, 0.90)}")
-    print(f"95th percentile: {percentile(lengths, 0.95)}")
-    print(f"99th percentile: {percentile(lengths, 0.99)}")
+    for fraction in (0.50, 0.75, 0.90, 0.95, 0.99):
+        print(f"  p{int(fraction * 100):<3}: {percentile(lengths, fraction)}")
 
-    print("\n512-token limit analysis:")
-    print(f"Samples exceeding 512 tokens: {truncated_512}")
-    print(f"Percentage truncated: {(truncated_512 / total) * 100:.2f}%")
+    print(f"\n{config.MAX_LENGTH}-token limit analysis:")
+    print(f"  functions needing >1 chunk : {over_limit} ({over_limit / total * 100:.2f}%)")
+    print(
+        f"  functions exceeding {config.MAX_CHUNKS_PER_FUNCTION} chunks"
+        f" : {over_max_chunks} ({over_max_chunks / total * 100:.2f}%)"
+    )
+    print(f"  total chunks after capping : {total_chunks}")
+    print(f"  mean chunks per function   : {total_chunks / total:.3f}")
 
 
-def main():
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--dir", type=Path, default=config.PROCESSED_DIR)
+    parser.add_argument("--model", default=config.MODEL_NAME)
+    args = parser.parse_args()
+
+    from transformers import AutoTokenizer
+
     print("=" * 60)
     print("CODEBERT TOKEN LENGTH ANALYSIS")
     print("=" * 60)
+    print(f"\nLoading tokenizer: {args.model}")
 
-    print(f"\nLoading tokenizer: {MODEL_NAME}")
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    tokenizer = AutoTokenizer.from_pretrained(args.model)
 
-    for name, path in FILES.items():
-        analyze_file(name, path, tokenizer)
+    for split in config.SPLITS:
+        analyze_file(split, args.dir / f"primevul_{split}.jsonl", tokenizer)
 
 
 if __name__ == "__main__":

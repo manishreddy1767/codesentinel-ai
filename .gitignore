@@ -17,14 +17,16 @@ htmlcov/
 .env
 .env.*
 
-# Large datasets
-data/primevul_dataset/
-data/processed/
-data/chunked/
+# Large datasets and generated artifacts.
+# data/README.md is kept so the expected layout is documented in-repo.
+data/*
+!data/README.md
 
-# Model checkpoints and trained models
-models/
-checkpoints/
+# Model checkpoints and trained weights.
+# Anchored to the repo root: a bare `models/` also matched the
+# backend/ml/models source package and silently excluded it.
+/models/
+/checkpoints/
 *.pt
 *.pth
 *.ckpt

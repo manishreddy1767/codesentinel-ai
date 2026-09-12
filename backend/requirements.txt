@@ -50,7 +50,9 @@ pyparsing==3.3.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.3
 PyYAML==6.0.3
+regex>=2023.0.0
 requests==2.34.2
+safetensors>=0.4.0
 scikit-learn==1.9.0
 scipy==1.18.1
 setuptools==78.1.0
@@ -61,9 +63,11 @@ sympy==1.13.1
 tensorboard==2.21.0
 tensorboard-data-server==0.7.2
 threadpoolctl==3.6.0
+tokenizers>=0.15.0
 torch==2.5.1+cu121
 torch-geometric==2.8.0.post1
 tqdm==4.70.0
+transformers>=4.44.0,<6
 tree-sitter==0.26.0
 tree-sitter-c==0.24.2
 tree-sitter-cpp==0.23.4
