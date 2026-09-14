@@ -48,3 +48,9 @@ Thumbs.db
 
 # Cloned external datasets/repositories
 data/PrimeVul/
+
+# Machine learning checkpoints
+data/checkpoints/
+*.pt
+*.pth
+*.ckpt
