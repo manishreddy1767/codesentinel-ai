@@ -54,3 +54,6 @@ data/checkpoints/
 *.pt
 *.pth
 *.ckpt
+
+# Generated ML datasets
+data/autotrain/
