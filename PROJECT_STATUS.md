@@ -3,56 +3,43 @@
 **Last updated:** 26 Sep 2026
 **Git commit:** `b681ff3` (working tree clean, pushed)
 
-> ## TRAINING PAUSED — 26 Sep 2026, 11:50
+> ## TRAINING RUNNING — resumed 26 Sep 2026, 13:18
 >
-> Stopped deliberately at the user's request before unplugging from AC power.
-> This was not a failure. On battery the GPU is clamped to 30 W instead of 60 W,
-> which is the condition associated with all three earlier crashes, so training
-> on battery would risk another `nvlddmkm` reset rather than make progress.
+> Paused at 11:50 at the user's request before unplugging, then resumed once the
+> machine was back on AC. The pause was deliberate, not a failure: on battery the
+> GPU is clamped to 30 W instead of 60 W, the condition associated with all three
+> earlier `nvlddmkm` resets.
 >
-> **State, verified after the stop:**
+> **Resume was verified, not assumed:**
 >
-> | Item | Value |
+> | Check | Result |
 > |---|---|
-> | Stopped at | epoch 3 of 3, batch 751 of 7,632, global step 16,015 |
-> | Restarts during this run | 0 (attempt 1 of 20) |
-> | `latest_checkpoint.pt` | **26 of 26 integrity checks passed**, resumable |
-> | `best_codebert.pt` | **16 of 16 passed**, holds **epoch-2** weights |
-> | Best validation PR-AUC | **0.13076** (epoch 2), F1 0.22685 |
-> | Test split | **untouched** — `artifacts/test_evaluations.jsonl` absent |
-> | GPU after stop | 0% util, 0 MiB, no compute processes |
+> | AC power before starting | `enforced.power.limit` 60 W, `BatteryStatus` 2 |
+> | Resumed at | step **16,015** — exactly where it stopped |
+> | Batch skip | first 751 batches of epoch 3 skipped via the `(seed, epoch)` permutation, so no batch is re-seen and the order stays reproducible |
+> | Checkpoints before resuming | `latest_checkpoint.pt` 26/26 checks, `best_codebert.pt` 16/16 |
 >
-> Both checkpoints were verified *after* the process was killed, so neither was
-> left half-written. Training logs were copied out of `/tmp` to
-> `artifacts/logs/` (gitignored, not committed) so they survive temp cleanup.
+> **Current position:** epoch 3 of 3, ~6,600 of 7,632 batches remaining, roughly
+> 90 minutes at the measured 1.23 batches/s. Logs: `/tmp/final_train5.log`,
+> `/tmp/supervisor5.log` (the paused run's logs are preserved in
+> `artifacts/logs/`, gitignored).
 >
-> **To resume, on AC power:** re-run the `train_supervised.py` command in
-> `reports/REPRODUCIBILITY.md` §5. It resumes from the checkpoint automatically;
-> roughly 6,900 batches of epoch 3 remain, about 95 minutes.
+> **Completed and recorded:** epochs 1 and 2. Epoch 2 improved validation PR-AUC
+> from 0.1114 to **0.1308 (+17.4%)** with recall 0.3262 → 0.4206 at flat
+> precision. See `reports/FINAL_EVALUATION.md` §4c. `best_codebert.pt` holds the
+> epoch-2 weights.
+>
+> **Test split: untouched** — `artifacts/test_evaluations.jsonl` absent.
 >
 > **Before any test evaluation**, `select_threshold.py` must be re-run on
 > whatever checkpoint ends up in `best_codebert.pt`. The existing
-> `decision_policy.json` is fitted to the **epoch-1** model and is stale — epoch
-> 2 overwrote the weights it was derived from. See `reports/FINAL_EVALUATION.md`
-> §6.
+> `decision_policy.json` is fitted to the **epoch-1** model and is stale; a stale
+> policy is still structurally valid, so nothing downstream detects it. See
+> `reports/FINAL_EVALUATION.md` §6.
 >
-> Epochs 1 and 2 are complete and their results are recorded in
-> `reports/FINAL_EVALUATION.md` §4c. Epoch 3 is the only incomplete step; the
-> decision on whether to train longer than 3 epochs was deliberately deferred
-> until its validation figure exists, because two points cannot distinguish
-> sustained improvement from one good epoch.
-
-Status vocabulary, used strictly:
-
-| Status | Meaning |
-|---|---|
-| **VERIFIED** | Implemented, tested, and executed on real data |
-| **IMPLEMENTED BUT NOT VERIFIED** | Code exists and unit-tests pass, but it has not run on real data |
-| **SYNTHETIC ONLY** | Exercised only on generated fixtures |
-| **BLOCKED** | Cannot proceed; blocker named |
-| **FAILED** | Attempted and did not work |
-| **NOT RUN** | Not attempted |
-| **NOT IMPLEMENTED** | No code exists |
+> **Note on scope:** finishing epoch 3 closes the gap with the reference paper's
+> 10-epoch protocol and improves the metrics. It does **not** add novelty — that
+> is a separate question, discussed with the user on 26 Sep and not yet acted on.
 
 ---
 
