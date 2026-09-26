@@ -3,43 +3,39 @@
 **Last updated:** 26 Sep 2026
 **Git commit:** `b681ff3` (working tree clean, pushed)
 
-> ## TRAINING RUNNING — resumed 26 Sep 2026, 13:18
+> ## TRAINING EXTENDED TO 6 EPOCHS — 26 Sep 2026, 15:05
 >
-> Paused at 11:50 at the user's request before unplugging, then resumed once the
-> machine was back on AC. The pause was deliberate, not a failure: on battery the
-> GPU is clamped to 30 W instead of 60 W, the condition associated with all three
-> earlier `nvlddmkm` resets.
+> The 3-epoch run **completed cleanly**: 1 attempt, 0 crashes, `NEW BEST` at every
+> epoch. Validation PR-AUC climbed 0.1114 → 0.1308 → **0.1450** (+30.2%), F1
+> 0.2093 → **0.2354**. `best_codebert.pt` holds the epoch-3 weights, 16/16
+> integrity checks, `best_epoch=3`.
 >
-> **Resume was verified, not assumed:**
+> **Why it was extended rather than evaluated.** The trend had not flattened, and
+> epoch 3 produced its gain while the linear schedule annealed the learning rate
+> to **1.15e-07** — the model kept improving while it had almost stopped learning.
+> That is underfitting, not convergence. This was the branch committed to in
+> advance of seeing the number.
 >
-> | Check | Result |
-> |---|---|
-> | AC power before starting | `enforced.power.limit` 60 W, `BatteryStatus` 2 |
-> | Resumed at | step **16,015** — exactly where it stopped |
-> | Batch skip | first 751 batches of epoch 3 skipped via the `(seed, epoch)` permutation, so no batch is re-seen and the order stays reproducible |
-> | Checkpoints before resuming | `latest_checkpoint.pt` 26/26 checks, `best_codebert.pt` 16/16 |
+> Resume verified: `starting step 22896`, "Skipping the first 0 batches of epoch
+> 4", banner `EPOCH 4/6`, so epoch 3 is not repeated. Raising `--epochs` also
+> re-plots the schedule, restoring the LR to **1.00e-05** — an 87x increase, and
+> the value the 6-epoch curve predicts at step 22,896.
 >
-> **Current position:** epoch 3 of 3, ~6,600 of 7,632 batches remaining, roughly
-> 90 minutes at the measured 1.23 batches/s. Logs: `/tmp/final_train5.log`,
-> `/tmp/supervisor5.log` (the paused run's logs are preserved in
-> `artifacts/logs/`, gitignored).
->
-> **Completed and recorded:** epochs 1 and 2. Epoch 2 improved validation PR-AUC
-> from 0.1114 to **0.1308 (+17.4%)** with recall 0.3262 → 0.4206 at flat
-> precision. See `reports/FINAL_EVALUATION.md` §4c. `best_codebert.pt` holds the
-> epoch-2 weights.
+> **Expected:** 3 more epochs, roughly 100 minutes each, so about 5 hours. Needs
+> AC power throughout — on battery the GPU is clamped to 30 W, the condition
+> behind every earlier crash. **Interruptible at any time**: checkpoints are
+> written every 250 batches, and early stopping (patience 2) halts the run if two
+> consecutive epochs fail to improve.
 >
 > **Test split: untouched** — `artifacts/test_evaluations.jsonl` absent.
 >
-> **Before any test evaluation**, `select_threshold.py` must be re-run on
-> whatever checkpoint ends up in `best_codebert.pt`. The existing
-> `decision_policy.json` is fitted to the **epoch-1** model and is stale; a stale
-> policy is still structurally valid, so nothing downstream detects it. See
-> `reports/FINAL_EVALUATION.md` §6.
+> **`decision_policy.json` is stale** — fitted to the epoch-1 model. It must be
+> re-derived on whatever checkpoint this run leaves in `best_codebert.pt` before
+> any test evaluation. A stale policy is structurally valid, so nothing downstream
+> detects it.
 >
-> **Note on scope:** finishing epoch 3 closes the gap with the reference paper's
-> 10-epoch protocol and improves the metrics. It does **not** add novelty — that
-> is a separate question, discussed with the user on 26 Sep and not yet acted on.
+> Logs: `/tmp/final_train6.log`, `/tmp/supervisor6.log`. Earlier runs preserved in
+> `artifacts/logs/` (gitignored).
 
 ---
 

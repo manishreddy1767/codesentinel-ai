@@ -195,46 +195,41 @@ schedule that does not anneal a model that is still underfitting**.
 
 ---
 
-## 4c. Epoch trend — MEASURED
+## 4c. Epoch trend — MEASURED, 3 epochs complete
 
-Both epochs are validation-only; no test data was involved in any of this.
+Validation only. No test data was involved in any of this.
 
-| metric (validation) | epoch 1 | epoch 2 | relative change |
-|---|---|---|---|
-| **PR-AUC** (headline) | 0.1114 | **0.1308** | **+17.4%** |
-| F1 at tuned threshold | 0.2093 | **0.2269** | +8.4% |
-| recall | 0.3262 | **0.4206** | +28.9% |
-| precision | 0.1548 | 0.1553 | +0.3% |
-| MCC | 0.1931 | **0.2217** | +14.8% |
-| ROC-AUC | 0.7951 | 0.8156 | +2.6% |
-| Brier (uncalibrated) | 0.0344 | 0.0345 | ~flat |
-| tuned threshold (objective f1) | 0.11 (calibrated) | 0.15 (raw) | — |
+| metric (validation) | epoch 1 | epoch 2 | epoch 3 | 1 → 3 |
+|---|---|---|---|---|
+| **PR-AUC** (headline) | 0.1114 | 0.1308 | **0.1450** | **+30.2%** |
+| F1 at tuned threshold | 0.2093 | 0.2269 | **0.2354** | +12.5% |
+| recall | 0.3262 | **0.4206** | 0.4006 | +22.8% |
+| precision | 0.1548 | 0.1553 | **0.1667** | +7.7% |
+| MCC | 0.1931 | 0.2217 | **0.2264** | +17.2% |
+| ROC-AUC | 0.7951 | 0.8156 | **0.8202** | +3.2% |
+| Brier (uncalibrated) | 0.0344 | 0.0345 | **0.0330** | −4.1% |
+| tuned threshold (objective f1) | 0.11 | 0.15 | 0.13 | — |
+| train loss (epoch mean) | — | 1.9117 | 1.7520 | — |
 
-The F1 figures are comparable: epoch 1's raw-threshold F1 was 0.2093 at raw
-threshold 0.20, and epoch 2's is 0.2269 at raw threshold 0.15.
+Run: 3 epochs, **1 attempt, 0 crashes** once on AC power. `NEW BEST` fired at
+every epoch, so `best_codebert.pt` holds the **epoch-3** weights
+(`best_epoch=3`, 16/16 integrity checks).
 
-**Interpretation.** The improvement is almost entirely **recall** — 0.3262 to
-0.4206, i.e. 294 of 699 vulnerabilities found rather than 228 — with precision
-essentially unchanged. Under a 36:1 imbalance that is the useful direction: the
-model is separating the classes better, not merely trading one error type for the
-other. PR-AUC rising 17.4% confirms the gain is in the *ranking*, not an artifact
-of where the threshold landed.
+**The trend has not flattened.** PR-AUC gained +0.0194 then +0.0142 — decelerating
+slightly, but nowhere near converged. Epoch 2's recall spike partly reverted while
+precision and PR-AUC both rose, which is the model trading a few marginal
+detections for better ordering rather than losing ground.
 
-`NEW BEST validation pr_auc 0.1308` fired, so `best_codebert.pt` now holds the
-epoch-2 weights. **This is why the frozen policy in §6 is stale** — it was fitted
-to epoch-1 scores, whose threshold (0.11) and isotonic knots no longer correspond
-to this model's score distribution.
+**The decisive observation is the learning rate.** Epoch 3 produced its gain while
+the 3-epoch linear schedule annealed the rate from 6.03e-06 to **1.15e-07** — the
+model improved while it had almost stopped learning. Combined with the flat
+training loss noted earlier, that is underfitting, not convergence. A model at its
+capacity limit does not keep improving as its step size goes to zero.
 
-The flat Brier alongside a better ranking is expected: `pos_weight` BCE optimises
-separation, not probability scale, which is what the calibration step exists to
-repair.
-
-**Decision taken on this evidence:** epoch 2 clearly earns its keep, so epoch 3
-was allowed to run rather than stopping at 2. The three-point trend, not the
-two-point one, decides whether a longer run is justified — a single increment
-cannot distinguish "still improving" from "one lucky epoch".
-
----
+**Decision taken on this evidence:** extend the run. This was the branch committed
+to in advance — improve at epoch 3 and more epochs are earning their keep. The
+counterfactual is recorded too: had epoch 3 been flat or worse, the frozen test
+evaluation would have been run on the 3-epoch model instead.
 
 ### How a longer run would be launched — MEASURED, not assumed
 
