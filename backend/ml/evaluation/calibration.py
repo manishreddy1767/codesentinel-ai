@@ -179,11 +179,31 @@ def calibration_report(probabilities, targets, bins: int = 10, strategy: str = "
     rows = reliability_curve(probabilities, targets, bins=bins, strategy=strategy)
     ece, mce = calibration_errors(probabilities, targets, bins=bins, strategy=strategy)
 
+    # Ranking metrics are carried alongside the calibration ones so that the
+    # adopt decision can check that a calibrator did not buy probability quality
+    # by destroying the ordering. Platt cannot do that, but isotonic can: it is a
+    # step function, so distinct scores can be mapped onto the same output and
+    # the tie loses ranking information.
+    from sklearn.metrics import average_precision_score, roc_auc_score
+
+    probabilities_array = np.asarray(probabilities, dtype=np.float64).ravel()
+    targets_array = np.asarray(targets, dtype=np.int64).ravel()
+
+    if 0 < int(targets_array.sum()) < targets_array.size:
+        pr_auc = float(average_precision_score(targets_array, probabilities_array))
+        roc_auc = float(roc_auc_score(targets_array, probabilities_array))
+    else:
+        # Single-class input: ranking is undefined rather than zero.
+        pr_auc = float("nan")
+        roc_auc = float("nan")
+
     return {
         "brier": brier_score(probabilities, targets),
         "ece": ece,
         "mce": mce,
         "ece_noise_floor": ece_noise_floor(rows),
+        "pr_auc": pr_auc,
+        "roc_auc": roc_auc,
         "bins": rows,
     }
 
@@ -424,19 +444,33 @@ def decide(
     after: dict,
     min_relative_gain: float = 0.10,
     noise_multiple: float = 2.0,
+    max_relative_ranking_loss: float = 0.02,
 ) -> dict:
     """
     Recommend whether to adopt calibration.
 
-    Adopted only when all three hold:
+    Adopted only when all four hold:
 
       * the measured ECE is more than ``noise_multiple`` times the sampling
         noise floor, so there is genuine miscalibration to fix;
       * out-of-fold ECE improves by at least ``min_relative_gain``;
-      * the Brier score does not regress.
+      * the Brier score does not regress;
+      * PR-AUC does not fall by more than ``max_relative_ranking_loss``.
 
     The noise-floor condition is what stops a calibrator being bolted onto an
     already-calibrated model: see ``ece_noise_floor``.
+
+    The ranking condition exists because Brier and ECE can both improve while
+    the ordering gets worse. Isotonic regression is a step function fitted to a
+    particular score distribution, so it maps distinct scores onto the same
+    output; every such tie discards ranking information. Applied to a score
+    distribution that differs from the one it was fitted on - a different
+    checkpoint, for instance - it can collapse a wide range into a handful of
+    levels. PR-AUC is this project's headline metric, so a calibrator that buys
+    probability quality by degrading the ordering is not a good trade.
+
+    The check is skipped when either report lacks a finite ``pr_auc``, which
+    keeps older callers working unchanged.
     """
 
     ece_before, ece_after = before["ece"], after["ece"]
@@ -460,7 +494,30 @@ def decide(
         np.isfinite(floor) and ece_before > noise_multiple * floor
     )
 
-    adopt = real_miscalibration and relative_gain >= min_relative_gain and not brier_worse
+    # 4. the calibrator must not degrade the ordering. Skipped, rather than
+    #    failed, when the caller supplied no ranking metric.
+    pr_auc_before = before.get("pr_auc", float("nan"))
+    pr_auc_after = after.get("pr_auc", float("nan"))
+
+    ranking_measured = (
+        np.isfinite(pr_auc_before)
+        and np.isfinite(pr_auc_after)
+        and pr_auc_before > 0
+    )
+
+    if ranking_measured:
+        relative_ranking_loss = (pr_auc_before - pr_auc_after) / pr_auc_before
+        ranking_ok = relative_ranking_loss <= max_relative_ranking_loss
+    else:
+        relative_ranking_loss = float("nan")
+        ranking_ok = True
+
+    adopt = (
+        real_miscalibration
+        and relative_gain >= min_relative_gain
+        and not brier_worse
+        and ranking_ok
+    )
 
     if adopt:
         reason = (
@@ -473,6 +530,14 @@ def decide(
             f"ECE {ece_before:.4f} is within sampling noise for this sample size "
             f"(floor {floor:.4f}); the model is already calibrated and any "
             f"apparent gain is an artifact of shrinking toward the base rate"
+        )
+    elif not ranking_ok:
+        reason = (
+            f"PR-AUC fell {pr_auc_before:.4f} -> {pr_auc_after:.4f} "
+            f"({relative_ranking_loss:.1%} relative, bar is "
+            f"{max_relative_ranking_loss:.0%}); the calibrator improved the "
+            f"probabilities by damaging the ranking, which is the metric that "
+            f"matters most here"
         )
     elif brier_worse:
         reason = (
@@ -494,4 +559,8 @@ def decide(
         "brier_before": brier_before,
         "brier_after": brier_after,
         "relative_ece_gain": float(relative_gain),
+        "pr_auc_before": float(pr_auc_before),
+        "pr_auc_after": float(pr_auc_after),
+        "relative_ranking_loss": float(relative_ranking_loss),
+        "ranking_checked": bool(ranking_measured),
     }

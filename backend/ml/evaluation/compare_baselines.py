@@ -101,6 +101,57 @@ def main() -> None:
         rows[f"ml_and_{name}"] = compute_metrics(intersection, targets, 0.5)
         rows[f"ml_plus_{name}"] = compute_metrics(blended, targets, threshold)
 
+    # ---- calibration ablation ------------------------------------------
+    # The report saves both the calibrated probabilities and the raw sigmoid
+    # outputs, so the effect of the adopted calibrator can be isolated without
+    # re-running the model.
+    #
+    # Threshold-dependent metrics are NOT comparable at the same numeric
+    # threshold, because the calibrator moves the probability scale: 0.11 on a
+    # calibrated score and 0.11 on a raw score are different operating points.
+    # So the frozen threshold is mapped back to the raw score at which the
+    # calibrated score first crosses it. Both rows then describe the same
+    # decision, and any residual difference comes from ties in the isotonic step
+    # function rather than from a different operating point.
+    raw_list = ml.get("raw_probabilities")
+    calibration_ablation = None
+
+    if raw_list:
+        raw_probabilities = np.asarray(raw_list, dtype=np.float64)
+
+        if raw_probabilities.size != targets.size:
+            print(
+                f"  WARNING: raw_probabilities has {raw_probabilities.size} entries "
+                f"but there are {targets.size} targets - skipping the calibration "
+                f"ablation rather than reporting a misaligned comparison."
+            )
+        else:
+            flagged = ml_probabilities >= threshold
+            equivalent_raw = (
+                float(raw_probabilities[flagged].min()) if flagged.any() else None
+            )
+
+            if equivalent_raw is None:
+                print(
+                    "  NOTE: nothing exceeds the frozen threshold, so no raw "
+                    "equivalent exists - calibration ablation skipped."
+                )
+            else:
+                calibration_ablation = {
+                    "calibration_applied": bool(ml.get("calibration_applied")),
+                    "calibrated_threshold": threshold,
+                    "equivalent_raw_threshold": equivalent_raw,
+                    "calibrated": compute_metrics(
+                        ml_probabilities, targets, threshold
+                    ).to_dict(),
+                    "raw": compute_metrics(
+                        raw_probabilities, targets, equivalent_raw
+                    ).to_dict(),
+                    "identical_probabilities": bool(
+                        np.allclose(ml_probabilities, raw_probabilities)
+                    ),
+                }
+
     positive_rate = float(targets.mean())
 
     print("=" * 96)
@@ -125,6 +176,57 @@ def main() -> None:
         "  confusion counts for those, and PR-AUC for the probability-valued rows."
     )
 
+    if calibration_ablation:
+        cal = calibration_ablation["calibrated"]
+        raw_m = calibration_ablation["raw"]
+
+        print()
+        print("  " + "=" * 88)
+        print("  CALIBRATION ABLATION - does the adopted calibrator earn its place?")
+        print("  " + "=" * 88)
+        print(
+            f"    calibrated threshold "
+            f"{calibration_ablation['calibrated_threshold']:.4f}  ==  raw threshold "
+            f"{calibration_ablation['equivalent_raw_threshold']:.4f}"
+        )
+
+        if calibration_ablation["identical_probabilities"]:
+            print(
+                "    NOTE: calibrated and raw scores are identical, so no "
+                "calibrator was applied. The rows below agree by construction."
+            )
+
+        print()
+        header = "variant"
+        print(
+            f"    {header:<16}{'PR-AUC':>9}{'ROC-AUC':>10}{'Brier':>9}"
+            f"{'precision':>11}{'recall':>9}{'F1':>8}"
+        )
+        print("    " + "-" * 72)
+        for label, m in (("calibrated", cal), ("raw", raw_m)):
+            print(
+                f"    {label:<16}{m['pr_auc']:>9.4f}{m['roc_auc']:>10.4f}"
+                f"{m['brier']:>9.4f}{m['precision']:>11.4f}"
+                f"{m['recall']:>9.4f}{m['f1']:>8.4f}"
+            )
+
+        print()
+        print(
+            f"    Brier  {raw_m['brier']:.4f} -> {cal['brier']:.4f} "
+            f"({cal['brier'] - raw_m['brier']:+.4f})   <- what calibration is for"
+        )
+        print(
+            f"    PR-AUC {raw_m['pr_auc']:.4f} -> {cal['pr_auc']:.4f} "
+            f"({cal['pr_auc'] - raw_m['pr_auc']:+.4f})"
+        )
+        print("    Brier is where a real gain should appear. A large PR-AUC drop is")
+        print("    not necessarily a bug: isotonic is a step function, so it can map")
+        print("    distinct scores onto one level and lose ranking to ties. Platt")
+        print("    cannot do this. select_threshold.py rejects any calibrator costing")
+        print("    more than 2% relative PR-AUC, so a large drop here means the policy")
+        print("    was frozen before that guard existed.")
+        print()
+
     print("\n  NOT IMPLEMENTED (reported, not estimated):")
     print("    CodeBERT + GATv2 : backend/ml/graphs/ is an empty package")
 
@@ -135,6 +237,7 @@ def main() -> None:
         "positive_rate": positive_rate,
         "variants": {name: m.to_dict() for name, m in rows.items()},
         "not_implemented": ["codebert_gatv2"],
+        "calibration_ablation": calibration_ablation,
     }
 
     out_path = args.out or (config.REPORTS_DIR / "comparison_test.json")
