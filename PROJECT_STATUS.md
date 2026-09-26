@@ -1,7 +1,46 @@
 # CodeSentinel-AI — Project Status
 
-**Last updated:** 19 Sep 2026
-**Git commit:** `c919c38` (working tree dirty — 30 uncommitted files)
+**Last updated:** 26 Sep 2026
+**Git commit:** `b681ff3` (working tree clean, pushed)
+
+> ## TRAINING PAUSED — 26 Sep 2026, 11:50
+>
+> Stopped deliberately at the user's request before unplugging from AC power.
+> This was not a failure. On battery the GPU is clamped to 30 W instead of 60 W,
+> which is the condition associated with all three earlier crashes, so training
+> on battery would risk another `nvlddmkm` reset rather than make progress.
+>
+> **State, verified after the stop:**
+>
+> | Item | Value |
+> |---|---|
+> | Stopped at | epoch 3 of 3, batch 751 of 7,632, global step 16,015 |
+> | Restarts during this run | 0 (attempt 1 of 20) |
+> | `latest_checkpoint.pt` | **26 of 26 integrity checks passed**, resumable |
+> | `best_codebert.pt` | **16 of 16 passed**, holds **epoch-2** weights |
+> | Best validation PR-AUC | **0.13076** (epoch 2), F1 0.22685 |
+> | Test split | **untouched** — `artifacts/test_evaluations.jsonl` absent |
+> | GPU after stop | 0% util, 0 MiB, no compute processes |
+>
+> Both checkpoints were verified *after* the process was killed, so neither was
+> left half-written. Training logs were copied out of `/tmp` to
+> `artifacts/logs/` (gitignored, not committed) so they survive temp cleanup.
+>
+> **To resume, on AC power:** re-run the `train_supervised.py` command in
+> `reports/REPRODUCIBILITY.md` §5. It resumes from the checkpoint automatically;
+> roughly 6,900 batches of epoch 3 remain, about 95 minutes.
+>
+> **Before any test evaluation**, `select_threshold.py` must be re-run on
+> whatever checkpoint ends up in `best_codebert.pt`. The existing
+> `decision_policy.json` is fitted to the **epoch-1** model and is stale — epoch
+> 2 overwrote the weights it was derived from. See `reports/FINAL_EVALUATION.md`
+> §6.
+>
+> Epochs 1 and 2 are complete and their results are recorded in
+> `reports/FINAL_EVALUATION.md` §4c. Epoch 3 is the only incomplete step; the
+> decision on whether to train longer than 3 epochs was deliberately deferred
+> until its validation figure exists, because two points cannot distinguish
+> sustained improvement from one good epoch.
 
 Status vocabulary, used strictly:
 
