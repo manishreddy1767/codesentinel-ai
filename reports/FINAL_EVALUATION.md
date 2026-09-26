@@ -123,6 +123,78 @@ TP 228. Predicted positive: 1,480.
 
 ---
 
+## 4b. Literature reference point — is F1 ~0.21 low?
+
+**Source:** Ding et al., *"Vulnerability Detection with Code Language Models:
+How Far Are We?"* (PrimeVul), arXiv:2403.18624, Table V. Values transcribed
+from the paper, not from memory or a search summary.
+
+### Published results, fine-tuned AND evaluated on PrimeVul
+
+| Model | Params | Accuracy | **F1** | VD-S (FNR) |
+|---|---|---|---|---|
+| CodeT5 | 60M | 96.67 | 19.70 | 89.93 |
+| **CodeBERT** | **125M** | **96.87** | **20.86** | **88.78** |
+| UniXcoder | 125M | 96.86 | 21.43 | 89.21 |
+| StarCoder2 | 7B | 97.02 | 18.05 | 89.64 |
+| CodeGen2.5 | 7B | 96.65 | 19.61 | 91.51 |
+
+**This project's CodeBERT, validation split: F1 0.2093.**
+**Published CodeBERT, PrimeVul test split: F1 0.2086.**
+
+The implementation is **at the published state of the art for this benchmark**.
+Not below it.
+
+### Why the absolute numbers are so low
+
+The entire field — including two 7B-parameter decoders — sits in a band of
+**F1 18.05 to 21.43**. A 7B StarCoder2 scores *lower* than 125M CodeBERT here.
+The same CodeBERT reaches **F1 62.88 on BigVul**, and collapses to **4.49**
+when trained on BigVul and tested on PrimeVul. That collapse is the paper's
+central thesis: earlier benchmarks were leaky and unrealistically easy.
+
+The paper reports PrimeVul's class ratio as "roughly 1:32", matching the
+30.4:1 measured here.
+
+**Implication for this project:** a target of F1 0.5+ on PrimeVul is not a
+realistic goal for this model class. Reported numbers in that range on this
+dataset would warrant checking the de-duplication first — which is precisely
+the failure mode the normalized-code leakage audit in §Dataset Card was built
+to catch, and which found 796 leaked test functions.
+
+### Protocol differences worth noting
+
+| Setting | Paper | This project |
+|---|---|---|
+| Learning rate | 2e-5 (fixed, not tuned) | 1.827e-05 (tuned on validation) — essentially the same |
+| **Epochs (<7B models)** | **10** | **3** |
+| Hardware | NVIDIA A100 80GB cluster | 1x RTX 3050 Laptop, 4GB |
+| Training data | full PrimeVul train | 61,050 undersampled 10:1 (compute budget) |
+
+**Epoch count is the one substantive gap**, and it independently corroborates
+the underfitting diagnosis found here from the training curve (loss flat across
+an epoch boundary while the linear schedule decayed the rate).
+
+### Consequences for the improvement plan
+
+Two planned interventions were **dropped on this evidence**:
+
+- **Swapping CodeBERT for UniXcoder** was ranked as the highest-ceiling single
+  change. The paper measures the gain at **+0.57 F1** (21.43 vs 20.86) — 
+  noise-level for several hours of work.
+- **Extending the learning-rate search upward** was ranked highly on the basis
+  of a monotonic trend across four local trials. The paper's 2e-5 is
+  essentially the value already selected here, so the optimum is likely already
+  bracketed.
+
+Raising `max_chunks` had already been dropped on separate evidence (recall
+32.6% against an 83.5% truncation ceiling).
+
+What survives as the evidence-backed lever is **training for more epochs with a
+schedule that does not anneal a model that is still underfitting**.
+
+---
+
 ## 5. Calibration — MEASURED, adopted
 
 Fitted and judged **entirely inside validation**, by stratified K-fold so the
