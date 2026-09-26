@@ -11,9 +11,11 @@ Breakdowns produced
 -------------------
   * confusion counts at the frozen threshold
   * performance on TRUNCATED vs NON-TRUNCATED functions
-      - this is the one that matters most here: vulnerable functions truncate
-        5.9x more often than benign ones, so if the 8-chunk cap is costing
-        recall it should show up as a lower recall on the truncated subset
+      - this is the one that matters most here: on the test split 20.86% of
+        vulnerable functions truncate versus 2.40% of benign ones, a ratio of
+        8.7x (full-population count, not a sample), so if the 8-chunk cap is
+        costing recall it should show up as a lower recall on the truncated
+        subset
   * performance by function length decile
   * performance by chunk count
   * per-CWE recall (only 11.8% of records carry a CWE, so counts are small)
@@ -166,11 +168,23 @@ def main() -> None:
         bucket_metrics(probabilities, targets, ~truncated, threshold, "not truncated"),
         bucket_metrics(probabilities, targets, truncated, threshold, "TRUNCATED (8-chunk cap)"),
     ]
+    # Measured from this split's own records rather than quoted, so the caption
+    # cannot drift from the data the way a hard-coded figure did.
+    vuln_trunc = float(truncated[targets == 1].mean()) if (targets == 1).any() else 0.0
+    benign_trunc = float(truncated[targets == 0].mean()) if (targets == 0).any() else 0.0
+    ratio = (vuln_trunc / benign_trunc) if benign_trunc > 0 else float("inf")
+
     print_table(
         rows,
         "1. TRUNCATION — does the 8-chunk cap cost recall?",
-        "vulnerable functions truncate 5.9x more often than benign ones",
+        f"{vuln_trunc:.2%} of vulnerable vs {benign_trunc:.2%} of benign "
+        f"functions truncate ({ratio:.1f}x), measured on this split",
     )
+    results["truncation_rates"] = {
+        "vulnerable_truncated_fraction": vuln_trunc,
+        "benign_truncated_fraction": benign_trunc,
+        "ratio": ratio,
+    }
     results["truncation"] = [r for r in rows if r]
 
     both = [r for r in rows if r]

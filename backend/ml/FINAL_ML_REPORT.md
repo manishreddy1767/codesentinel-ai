@@ -108,12 +108,14 @@ Eight chunks at stride 382 cover the first 3,184 tokens.
 |---|---|
 | Functions truncated | 2.57% |
 | **Corpus tokens discarded** | **22.5%** |
-| **Vulnerable truncated** | **13.33%** (median 812 tokens) |
+| **Vulnerable truncated** | **19.24%** on train, **20.86%** on test (median 812 tokens) |
 | Benign truncated | 2.25% (median 206 tokens) |
 
-Vulnerable functions are ~4× longer and truncate **5.9× more often**. Any
+Vulnerable functions are ~4× longer and truncate **7.9× more often** on train (**8.7×** on test). Any
 vulnerability past token 3,184 is invisible to the model — a hard ceiling on
 achievable recall, concentrated on the class that matters.
+
+> **Provenance.** These truncation figures are full-population counts over every record in each split. An earlier revision quoted 13.33% / 5.9x from a 3% random sample; the effect is stronger than that sample suggested. See `reports/DATASET_CARD.md`.
 
 ### 4.3 ROC-AUC reads 0.83 for a model that flags nothing
 
