@@ -160,7 +160,28 @@ python -m backend.ml.evaluation.baselines --dir data/processed_clean --split tes
 python -m backend.ml.evaluation.compare_baselines \
     --ml artifacts/reports/test_report.json \
     --baselines artifacts/reports/baselines_test.json
+
+# Post-hoc analyses. Both read the saved predictions and never run the model,
+# so they can be re-run freely without touching the one-shot test budget.
+python scripts/error_analysis.py \
+    --ml artifacts/reports/test_report.json --split test \
+    --baselines artifacts/reports/baselines_test.json
+python scripts/sensitivity_valid_test_overlap.py \
+    --ml artifacts/reports/test_report.json
 ```
+
+**Order matters at one point only.** `select_threshold.py` must be re-run
+against whichever checkpoint training finally leaves in `best_codebert.pt`. The
+threshold and the isotonic knots are fitted to a specific score distribution; a
+policy carried over from an earlier epoch's checkpoint puts the operating point
+somewhere nobody chose. `test_model.py` cannot detect this, because a stale
+policy is still a structurally valid one.
+
+Everything after `test_model.py` is pure arithmetic on the saved predictions, so
+the test split is *scored* exactly once regardless of how many times the
+analyses are repeated. `artifacts/test_evaluations.jsonl` is the append-only
+record of how many times it was actually scored.
+
 
 ---
 
