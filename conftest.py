@@ -22,3 +22,9 @@ for path in (ROOT, BACKEND):
     entry = str(path)
     if entry not in sys.path:
         sys.path.insert(0, entry)
+
+
+# `legacy/` holds a superseded parallel implementation kept for reference only
+# (see legacy/README.md). Its tests target an API that no longer exists, so
+# collecting them would report failures for code that is intentionally retired.
+collect_ignore_glob = ["legacy/*"]

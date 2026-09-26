@@ -1,339 +1,238 @@
+"""
+Stage C (remediation) - REMOVE LEAKED RECORDS FROM THE TRAINING SPLIT.
+
+    python -m backend.ml.preprocessing.clean_split_duplicates \
+        --in-dir data/processed --out-dir data/processed_clean
+
+    # preview only, writes nothing
+    python -m backend.ml.preprocessing.clean_split_duplicates --dry-run
+
+Only the TRAINING split is ever filtered.
+
+Why train-only
+--------------
+Leakage is fixed by removing the offending records from *training*, not from
+evaluation. Dropping them from validation or test would silently change what
+the model is measured against, make the numbers incomparable to published
+PrimeVul results, and bias the held-out sets towards whatever is easy. So
+valid and test are copied through byte-for-byte, and every removal happens on
+the side that is allowed to shrink.
+
+Raw data is never touched: this reads ``--in-dir`` (processed) and writes to a
+separate ``--out-dir``. Writing the output on top of the input is refused.
+"""
+
+import argparse
 import json
+from collections import Counter, defaultdict
 from pathlib import Path
-from collections import Counter
+
+from backend.ml import config
+from backend.ml.preprocessing.audit_splits import (
+    DIMENSIONS,
+    _exact_hash,
+    _normalized_hash,
+)
+from backend.ml.utils.io import read_jsonl
+
+# Dimensions that justify dropping a training record. Deliberately excludes
+# "project": sharing a repository is not leakage, and filtering on it would
+# delete most of the training data for no defensible reason.
+DEFAULT_DIMENSIONS = ("exact_code", "normalized_code", "hash", "idx", "big_vul_idx")
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
+def _record_keys(record: dict, dimensions) -> dict:
+    """The key this record occupies in each requested dimension."""
 
-INPUT_DIR = PROJECT_ROOT / "data" / "processed"
-OUTPUT_DIR = PROJECT_ROOT / "data" / "processed"
+    keys = {}
+    code = record.get("func")
 
-TRAIN_FILE = INPUT_DIR / "primevul_train_balanced.jsonl"
-VALID_FILE = INPUT_DIR / "primevul_valid.jsonl"
-TEST_FILE = INPUT_DIR / "primevul_test.jsonl"
+    if isinstance(code, str) and code.strip():
+        if "exact_code" in dimensions:
+            keys["exact_code"] = _exact_hash(code)
+        if "normalized_code" in dimensions:
+            keys["normalized_code"] = _normalized_hash(code)
 
-OUTPUT_TRAIN = OUTPUT_DIR / "primevul_train_clean.jsonl"
-OUTPUT_VALID = OUTPUT_DIR / "primevul_valid_clean.jsonl"
-OUTPUT_TEST = OUTPUT_DIR / "primevul_test_clean.jsonl"
-
-
-def normalize_code(code):
-    """
-    Normalize code for exact duplicate comparison.
-
-    Removes leading/trailing whitespace and normalizes
-    line endings while preserving the actual code content.
-    """
-    if not isinstance(code, str):
-        return ""
-
-    return code.replace("\r\n", "\n").strip()
-
-
-def load_jsonl(path):
-    records = []
-
-    with open(path, "r", encoding="utf-8") as file:
-        for line in file:
-            line = line.strip()
-
-            if not line:
-                continue
-
-            records.append(json.loads(line))
-
-    return records
-
-
-def save_jsonl(records, path):
-    with open(path, "w", encoding="utf-8") as file:
-        for record in records:
-            file.write(
-                json.dumps(
-                    record,
-                    ensure_ascii=False,
-                )
-                + "\n"
-            )
-
-
-def get_code_set(records):
-    return {
-        normalize_code(record.get("func", ""))
-        for record in records
-    }
-
-
-def remove_duplicates(records, blocked_codes):
-    cleaned = []
-    removed = 0
-
-    for record in records:
-
-        code = normalize_code(
-            record.get("func", "")
-        )
-
-        if code in blocked_codes:
-            removed += 1
+    for name, kind, _ in DIMENSIONS:
+        if kind == "code" or name not in dimensions:
             continue
 
-        cleaned.append(record)
+        value = record.get(name)
 
-    return cleaned, removed
+        if value is None or value == "":
+            continue
+
+        keys[name] = str(value)
+
+    return keys
 
 
-def print_stats(name, records):
-    counts = Counter(
-        record.get("target", 0)
-        for record in records
+def build_holdout_index(paths, dimensions) -> dict:
+    """Every key occupied by any record in the held-out splits."""
+
+    index = defaultdict(set)
+
+    for path in paths:
+        if not path.exists():
+            print(f"  WARNING: {path} not found; its keys cannot be excluded.")
+            continue
+
+        count = 0
+
+        for _, record in read_jsonl(path, skip_invalid=True):
+            count += 1
+            for dimension, key in _record_keys(record, dimensions).items():
+                index[dimension].add(key)
+
+        print(f"  indexed {count:>8} records from {path.name}")
+
+    return index
+
+
+def clean_train(
+    train_path: Path,
+    output_path: Path,
+    holdout_index: dict,
+    dimensions,
+    dry_run: bool,
+) -> dict:
+    """Filter the training split against the held-out index."""
+
+    stats = Counter()
+    by_dimension = Counter()
+
+    handle = None
+
+    if not dry_run:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        handle = output_path.open("w", encoding="utf-8")
+
+    try:
+        for _, record in read_jsonl(train_path, skip_invalid=True):
+            stats["read"] += 1
+
+            keys = _record_keys(record, dimensions)
+
+            hits = [
+                dimension
+                for dimension, key in keys.items()
+                if key in holdout_index.get(dimension, ())
+            ]
+
+            if hits:
+                stats["removed"] += 1
+                # Counted per dimension, so the report shows which check earned
+                # its keep rather than just a total.
+                for dimension in hits:
+                    by_dimension[dimension] += 1
+                continue
+
+            stats["kept"] += 1
+
+            if handle is not None:
+                handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+    finally:
+        if handle is not None:
+            handle.close()
+
+    return {"stats": stats, "by_dimension": by_dimension}
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--in-dir", type=Path, default=config.PROCESSED_DIR)
+    parser.add_argument(
+        "--out-dir",
+        type=Path,
+        default=config.DATA_DIR / "processed_clean",
     )
+    parser.add_argument(
+        "--dimensions",
+        nargs="+",
+        default=list(DEFAULT_DIMENSIONS),
+        help=f"Overlap dimensions that justify removal (default: {' '.join(DEFAULT_DIMENSIONS)})",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Report what would be removed without writing anything",
+    )
+    args = parser.parse_args()
 
-    total = len(records)
+    print("=" * 74)
+    print("CODESENTINEL - TRAIN SPLIT LEAKAGE CLEANING")
+    print("=" * 74)
+    print(f"  in  : {args.in_dir}")
+    print(f"  out : {args.out_dir}{'  (DRY RUN - nothing written)' if args.dry_run else ''}")
+    print(f"  dims: {', '.join(args.dimensions)}")
 
-    print("\n" + "=" * 60)
-    print(name)
-    print("=" * 60)
-
-    print(f"Total samples: {total}")
-
-    for label in sorted(counts):
-
-        count = counts[label]
-
-        percentage = (
-            count / total * 100
-            if total > 0
-            else 0
-        )
-
+    if not args.dry_run and args.out_dir.resolve() == args.in_dir.resolve():
         print(
-            f"Label {label}: "
-            f"{count} "
-            f"({percentage:.2f}%)"
+            "\nERROR: --out-dir must differ from --in-dir. Refusing to overwrite "
+            "the input splits in place."
         )
+        raise SystemExit(2)
 
+    train_path = args.in_dir / "primevul_train.jsonl"
 
-def main():
+    if not train_path.exists():
+        print(f"\nERROR: {train_path} not found.")
+        raise SystemExit(2)
 
-    print("=" * 70)
-    print("PRIMEVUL CROSS-SPLIT DUPLICATE CLEANING")
-    print("=" * 70)
-
-    print("\nLoading datasets...")
-
-    train_records = load_jsonl(
-        TRAIN_FILE
+    print("\nIndexing held-out splits...")
+    holdout_index = build_holdout_index(
+        [args.in_dir / "primevul_valid.jsonl", args.in_dir / "primevul_test.jsonl"],
+        set(args.dimensions),
     )
 
-    valid_records = load_jsonl(
-        VALID_FILE
+    print("\nFiltering training split...")
+    result = clean_train(
+        train_path,
+        args.out_dir / "primevul_train.jsonl",
+        holdout_index,
+        set(args.dimensions),
+        args.dry_run,
     )
 
-    test_records = load_jsonl(
-        TEST_FILE
-    )
+    stats = result["stats"]
 
-    print_stats(
-        "ORIGINAL TRAIN",
-        train_records,
-    )
+    print("\n" + "=" * 74)
+    print("RESULT")
+    print("=" * 74)
+    print(f"  train records read   : {stats['read']}")
+    print(f"  removed (leaked)     : {stats['removed']}")
+    print(f"  kept                 : {stats['kept']}")
 
-    print_stats(
-        "ORIGINAL VALIDATION",
-        valid_records,
-    )
+    if stats["read"]:
+        print(f"  removal rate         : {stats['removed'] / stats['read']:.4%}")
 
-    print_stats(
-        "ORIGINAL TEST",
-        test_records,
-    )
+    if result["by_dimension"]:
+        print("\n  removals by dimension (a record can match several):")
+        for dimension, count in result["by_dimension"].most_common():
+            print(f"    {dimension:<18} {count}")
 
-    # --------------------------------------------------
-    # KEEP TRAINING DATA UNCHANGED
-    # --------------------------------------------------
+    if args.dry_run:
+        print("\nDRY RUN: no files were written.")
+        return
 
+    # valid/test are copied unchanged so the cleaned directory is a complete,
+    # self-consistent dataset rather than a train-only fragment.
+    for split in ("valid", "test"):
+        source = args.in_dir / f"primevul_{split}.jsonl"
+        destination = args.out_dir / f"primevul_{split}.jsonl"
+
+        if not source.exists():
+            continue
+
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(source.read_bytes())
+        print(f"  copied {split} unchanged -> {destination}")
+
+    print(f"\nCleaned splits written to {args.out_dir}")
+    print("Re-run the audit against them to confirm:")
     print(
-        "\nKeeping training split unchanged..."
+        f"  python -m backend.ml.preprocessing.audit_splits --dir {args.out_dir} --strict"
     )
-
-    cleaned_train = train_records
-
-    train_codes = get_code_set(
-        cleaned_train
-    )
-
-    # --------------------------------------------------
-    # CLEAN VALIDATION
-    # --------------------------------------------------
-
-    print(
-        "\nRemoving validation functions "
-        "that appear in training..."
-    )
-
-    cleaned_valid, removed_valid = (
-        remove_duplicates(
-            valid_records,
-            train_codes,
-        )
-    )
-
-    print(
-        f"Removed from validation: "
-        f"{removed_valid}"
-    )
-
-    valid_codes = get_code_set(
-        cleaned_valid
-    )
-
-    # --------------------------------------------------
-    # CLEAN TEST
-    # --------------------------------------------------
-
-    print(
-        "\nRemoving test functions "
-        "that appear in training "
-        "or validation..."
-    )
-
-    blocked_test_codes = (
-        train_codes
-        | valid_codes
-    )
-
-    cleaned_test, removed_test = (
-        remove_duplicates(
-            test_records,
-            blocked_test_codes,
-        )
-    )
-
-    print(
-        f"Removed from test: "
-        f"{removed_test}"
-    )
-
-    # --------------------------------------------------
-    # SAVE CLEAN DATASETS
-    # --------------------------------------------------
-
-    print(
-        "\nSaving cleaned datasets..."
-    )
-
-    save_jsonl(
-        cleaned_train,
-        OUTPUT_TRAIN,
-    )
-
-    save_jsonl(
-        cleaned_valid,
-        OUTPUT_VALID,
-    )
-
-    save_jsonl(
-        cleaned_test,
-        OUTPUT_TEST,
-    )
-
-    # --------------------------------------------------
-    # FINAL STATS
-    # --------------------------------------------------
-
-    print_stats(
-        "CLEAN TRAIN",
-        cleaned_train,
-    )
-
-    print_stats(
-        "CLEAN VALIDATION",
-        cleaned_valid,
-    )
-
-    print_stats(
-        "CLEAN TEST",
-        cleaned_test,
-    )
-
-    # --------------------------------------------------
-    # FINAL OVERLAP CHECK
-    # --------------------------------------------------
-
-    print("\n" + "=" * 70)
-    print("FINAL CROSS-SPLIT OVERLAP CHECK")
-    print("=" * 70)
-
-    clean_train_codes = get_code_set(
-        cleaned_train
-    )
-
-    clean_valid_codes = get_code_set(
-        cleaned_valid
-    )
-
-    clean_test_codes = get_code_set(
-        cleaned_test
-    )
-
-    train_valid_overlap = (
-        clean_train_codes
-        & clean_valid_codes
-    )
-
-    train_test_overlap = (
-        clean_train_codes
-        & clean_test_codes
-    )
-
-    valid_test_overlap = (
-        clean_valid_codes
-        & clean_test_codes
-    )
-
-    print(
-        "\nTrain vs Validation overlap:",
-        len(train_valid_overlap),
-    )
-
-    print(
-        "Train vs Test overlap:",
-        len(train_test_overlap),
-    )
-
-    print(
-        "Validation vs Test overlap:",
-        len(valid_test_overlap),
-    )
-
-    if (
-        len(train_valid_overlap) == 0
-        and len(train_test_overlap) == 0
-        and len(valid_test_overlap) == 0
-    ):
-
-        print(
-            "\nPASS: No exact duplicate "
-            "functions remain across splits."
-        )
-
-    else:
-
-        print(
-            "\nWARNING: Cross-split duplicates "
-            "still remain."
-        )
-
-    print("\n" + "=" * 70)
-    print("CLEANING COMPLETED")
-    print("=" * 70)
-
-    print("\nOutput files:")
-
-    print(OUTPUT_TRAIN)
-    print(OUTPUT_VALID)
-    print(OUTPUT_TEST)
 
 
 if __name__ == "__main__":
