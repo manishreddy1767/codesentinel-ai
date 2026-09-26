@@ -16,7 +16,6 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from torch import nn
 from torch.utils.data import DataLoader
 
 from backend.ml import config
@@ -58,6 +57,9 @@ class Trainer:
         threshold_min_precision: float = config.THRESHOLD_MIN_PRECISION,
         restore_best: bool = True,
         pin_memory: bool | None = None,
+        scheduler: str = "linear",
+        loss: str = "bce",
+        focal_gamma: float = 2.0,
     ):
         self.model = model.to(device)
         self.device = device
@@ -95,6 +97,13 @@ class Trainer:
         self.threshold_min_precision = threshold_min_precision
         self.restore_best = restore_best
 
+        if scheduler not in ("linear", "cosine", "constant_with_warmup"):
+            raise ValueError(f"Unknown scheduler: {scheduler}")
+
+        self.scheduler_name = scheduler
+        self.loss_name = loss
+        self.focal_gamma = focal_gamma
+
         # Pinned (page-locked) host memory speeds host->device copies, but it
         # is a scarce OS resource and PyTorch's host caching allocator does not
         # reliably release it. On this project's hardware it has now aborted
@@ -124,8 +133,13 @@ class Trainer:
 
         # reduction="none" so per-sample losses are available for the
         # high-loss diagnostics; the mean is taken explicitly below.
-        self.criterion = nn.BCEWithLogitsLoss(
-            pos_weight=torch.tensor(self.pos_weight_value, device=device),
+        from backend.ml.training.losses import build_criterion
+
+        self.criterion = build_criterion(
+            self.loss_name,
+            pos_weight=self.pos_weight_value,
+            device=device,
+            focal_gamma=self.focal_gamma,
             reduction="none",
         )
 
@@ -203,12 +217,43 @@ class Trainer:
         )
 
     def _build_scheduler(self, warmup_ratio: float):
-        from transformers import get_linear_schedule_with_warmup
+        """
+        Learning-rate schedule.
+
+        "linear" (the original default) warms up then decays to zero over the
+        planned number of steps. That is the standard transformer recipe, but it
+        assumes the run is long enough to converge: it anneals the learning rate
+        regardless of whether the loss is still falling.
+
+        On this task the training loss was measured flat across an epoch
+        boundary (2.1383 -> ~2.08) while the schedule had already decayed the
+        rate from 1.83e-05 to 1.08e-05 - i.e. the model was being cooled down
+        while still underfitting. "constant_with_warmup" removes the decay so a
+        stalled run is not additionally starved, and "cosine" decays more gently
+        than linear. Which is best is an empirical question for the tuner.
+        """
+
+        from transformers import (
+            get_constant_schedule_with_warmup,
+            get_cosine_schedule_with_warmup,
+            get_linear_schedule_with_warmup,
+        )
 
         total_steps = max(1, self.optimizer_steps_per_epoch * self.epochs)
         warmup_steps = int(total_steps * warmup_ratio)
 
-        return get_linear_schedule_with_warmup(
+        if self.scheduler_name == "constant_with_warmup":
+            return get_constant_schedule_with_warmup(
+                self.optimizer, num_warmup_steps=warmup_steps
+            )
+
+        builder = (
+            get_cosine_schedule_with_warmup
+            if self.scheduler_name == "cosine"
+            else get_linear_schedule_with_warmup
+        )
+
+        return builder(
             self.optimizer,
             num_warmup_steps=warmup_steps,
             num_training_steps=total_steps,
@@ -610,6 +655,9 @@ class Trainer:
         print(f"  valid functions     : {len(self.valid_dataset)}")
         print(f"  device              : {self.device}")
         print(f"  mixed precision     : {self.use_amp}")
+        print(f"  loss                : {self.loss_name}"
+              + (f" (gamma={self.focal_gamma})" if self.loss_name == "focal" else ""))
+        print(f"  lr schedule         : {self.scheduler_name}")
         print(f"  batches/epoch       : {self.steps_per_epoch}")
         print("  " + memory_report())
 

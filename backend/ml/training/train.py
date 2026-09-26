@@ -127,6 +127,22 @@ def build_argparser() -> argparse.ArgumentParser:
         "--dropout", type=float, default=config.CLASSIFIER_DROPOUT
     )
     parser.add_argument("--monitor", default=config.EARLY_STOPPING_MONITOR)
+    parser.add_argument(
+        "--scheduler",
+        default="linear",
+        choices=("linear", "cosine", "constant_with_warmup"),
+        help=(
+            "LR schedule. 'linear' decays to zero over the planned steps, which "
+            "cools an underfit model; 'constant_with_warmup' removes the decay."
+        ),
+    )
+    parser.add_argument(
+        "--loss",
+        default="bce",
+        choices=("bce", "focal"),
+        help="bce = pos_weight-weighted BCE; focal = down-weight easy examples",
+    )
+    parser.add_argument("--focal-gamma", type=float, default=2.0)
     parser.add_argument("--checkpoint-dir", type=Path, default=config.CHECKPOINT_DIR)
     parser.add_argument("--model", default=config.MODEL_NAME)
 
@@ -278,6 +294,9 @@ def main() -> None:
         high_loss_threshold=args.high_loss_threshold,
         monitor=args.monitor,
         pin_memory=args.pin_memory,
+        scheduler=args.scheduler,
+        loss=args.loss,
+        focal_gamma=args.focal_gamma,
     )
 
     trainer.maybe_resume(resume=args.resume)

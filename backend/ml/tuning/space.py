@@ -39,6 +39,16 @@ SEARCH_SPACE = {
     "grad_accum_steps": ("categorical", [1, 2, 4]),
 }
 
+# Optimisation-behaviour choices. Searched only when enabled, because they
+# change what the run *does* rather than how big it is, and a diagnosis should
+# motivate including them. Here it does: training loss was flat across an epoch
+# boundary while the linear schedule was already decaying the learning rate, so
+# both the schedule and the loss weighting are live hypotheses.
+OPTIMISATION_SPACE = {
+    "scheduler": ("categorical", ["linear", "cosine", "constant_with_warmup"]),
+    "loss": ("categorical", ["bce", "focal"]),
+}
+
 # Architecture variants, searched only when explicitly enabled. The baseline
 # ("mean") is always a candidate so a comparison can never silently discard it.
 ARCHITECTURE_SPACE = {
@@ -53,8 +63,15 @@ MEMORY_SPACE = {
 }
 
 
-def build_space(include_architecture: bool = False, include_memory: bool = False) -> dict:
+def build_space(
+    include_architecture: bool = False,
+    include_memory: bool = False,
+    include_optimisation: bool = False,
+) -> dict:
     space = dict(SEARCH_SPACE)
+
+    if include_optimisation:
+        space.update(OPTIMISATION_SPACE)
 
     if include_architecture:
         space.update(ARCHITECTURE_SPACE)

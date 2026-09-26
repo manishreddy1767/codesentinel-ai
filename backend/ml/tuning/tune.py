@@ -181,6 +181,9 @@ class TrialRunner:
             high_loss_threshold=0.0,
             monitor=args.monitor,
             restore_best=False,
+            scheduler=parameters.get("scheduler", "linear"),
+            loss=parameters.get("loss", "bce"),
+            focal_gamma=parameters.get("focal_gamma", 2.0),
             # A sweep builds a fresh model and DataLoader per trial. PyTorch's
             # pinned-host-memory allocator does not hand that memory back
             # between loader lifetimes, and the process eventually aborts inside
@@ -348,6 +351,11 @@ def main() -> None:
         help="Narrow the learning-rate search range (upper bound)",
     )
     parser.add_argument("--search-architecture", action="store_true")
+    parser.add_argument(
+        "--search-optimisation",
+        action="store_true",
+        help="Also search the LR schedule and loss function",
+    )
     parser.add_argument("--search-memory", action="store_true")
 
     parser.add_argument("--backend", choices=("auto", "optuna", "random"), default="auto")
@@ -360,6 +368,7 @@ def main() -> None:
     space = build_space(
         include_architecture=args.search_architecture,
         include_memory=args.search_memory,
+        include_optimisation=args.search_optimisation,
     )
 
     # A narrowed learning-rate range, used to focus a follow-up search on the
