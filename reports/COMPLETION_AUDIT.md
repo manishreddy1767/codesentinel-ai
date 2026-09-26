@@ -1,7 +1,7 @@
 # CodeSentinel-AI — Completion Audit
 
-**Last updated:** 19 Sep 2026
-**Audit state:** INTERIM — final training in progress, test split not evaluated
+**Last updated:** 26 Sep 2026
+**Audit state:** INTERIM — epoch 3 of 3 training, test split not evaluated
 
 Status vocabulary, used strictly. No other words are used.
 
@@ -61,9 +61,9 @@ Status vocabulary, used strictly. No other words are used.
 | Checkpoint + resume | VERIFIED | resumed at batch 2,501 with RNG restored | — |
 | Training smoke test | VERIFIED | full metric suite, early stopping, best-restore | — |
 | Hyperparameter tuning | VERIFIED | 4 Optuna trials → val PR-AUC **0.1387** | 1 epoch, 9k subsample only |
-| **Final training** | IN PROGRESS | resumed; epoch 1 of 3 | crashed once at batch 2,500 (CUBLAS) |
-| Threshold optimisation | NOT RUN | tool built, unit-tested | needs trained model |
-| Calibration | NOT RUN | Platt + isotonic built, unit-tested | needs trained model |
+| **Final training** | IN PROGRESS | epoch 3 of 3; epochs 1-2 complete, val PR-AUC 0.1114 → **0.1308** | 3 crashes on battery (30 W clamp); 0 since moving to AC |
+| Threshold optimisation | VERIFIED | run on epoch-1 validation → threshold **0.1100**, `decision_policy.json` frozen | **stale**: fitted to epoch-1: must be re-derived on the final checkpoint |
+| Calibration | VERIFIED | isotonic adopted on epoch-1 validation, ECE 0.0293 → 0.0018 | **stale** with the threshold above; adopt rule now also guards ranking (PR-AUC) |
 | **Test evaluation** | NOT RUN | — | **guarantee intact** |
 | **Models** |
 | GraphCodeBERT | NOT IMPLEMENTED | CodeBERT used instead | deviation documented in `RESEARCH_CONTRIBUTION.md` §3 |
@@ -72,7 +72,7 @@ Status vocabulary, used strictly. No other words are used.
 | Explainability (static) | IMPLEMENTED BUT NOT VERIFIED | severity, confidence, line, CWE, remediation, CPG links | not evaluated for usefulness |
 | **Hybrid** |
 | Rules + taint fusion | VERIFIED | `rules_taint` baseline measured | indistinguishable from rules alone |
-| ML + rules fusion | NOT RUN | `compare_baselines.py` built | needs trained model |
+| ML + rules fusion | NOT RUN | `compare_baselines.py` built; calibration ablation added and exercised at full scale | needs the test report |
 | **Frontend** |
 | Pages render | VERIFIED | 8 pages | — |
 | **API integration** | VERIFIED | live `/analyze`, `/analyze/file`, `/supported-languages` | only analyze page is fully interactive |
