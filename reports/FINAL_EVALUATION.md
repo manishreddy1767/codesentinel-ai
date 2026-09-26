@@ -195,6 +195,47 @@ schedule that does not anneal a model that is still underfitting**.
 
 ---
 
+## 4c. Epoch trend — MEASURED
+
+Both epochs are validation-only; no test data was involved in any of this.
+
+| metric (validation) | epoch 1 | epoch 2 | relative change |
+|---|---|---|---|
+| **PR-AUC** (headline) | 0.1114 | **0.1308** | **+17.4%** |
+| F1 at tuned threshold | 0.2093 | **0.2269** | +8.4% |
+| recall | 0.3262 | **0.4206** | +28.9% |
+| precision | 0.1548 | 0.1553 | +0.3% |
+| MCC | 0.1931 | **0.2217** | +14.8% |
+| ROC-AUC | 0.7951 | 0.8156 | +2.6% |
+| Brier (uncalibrated) | 0.0344 | 0.0345 | ~flat |
+| tuned threshold (objective f1) | 0.11 (calibrated) | 0.15 (raw) | — |
+
+The F1 figures are comparable: epoch 1's raw-threshold F1 was 0.2093 at raw
+threshold 0.20, and epoch 2's is 0.2269 at raw threshold 0.15.
+
+**Interpretation.** The improvement is almost entirely **recall** — 0.3262 to
+0.4206, i.e. 294 of 699 vulnerabilities found rather than 228 — with precision
+essentially unchanged. Under a 36:1 imbalance that is the useful direction: the
+model is separating the classes better, not merely trading one error type for the
+other. PR-AUC rising 17.4% confirms the gain is in the *ranking*, not an artifact
+of where the threshold landed.
+
+`NEW BEST validation pr_auc 0.1308` fired, so `best_codebert.pt` now holds the
+epoch-2 weights. **This is why the frozen policy in §6 is stale** — it was fitted
+to epoch-1 scores, whose threshold (0.11) and isotonic knots no longer correspond
+to this model's score distribution.
+
+The flat Brier alongside a better ranking is expected: `pos_weight` BCE optimises
+separation, not probability scale, which is what the calibration step exists to
+repair.
+
+**Decision taken on this evidence:** epoch 2 clearly earns its keep, so epoch 3
+was allowed to run rather than stopping at 2. The three-point trend, not the
+two-point one, decides whether a longer run is justified — a single increment
+cannot distinguish "still improving" from "one lucky epoch".
+
+---
+
 ## 5. Calibration — MEASURED, adopted
 
 Fitted and judged **entirely inside validation**, by stratified K-fold so the
@@ -240,6 +281,15 @@ claimed from calibration itself.
 ---
 
 ## 6. Frozen decision policy
+
+> **STALE — fitted to the epoch-1 checkpoint.** Epoch 2 produced a better model
+> (§4c) and overwrote `best_codebert.pt`, so the threshold and isotonic knots
+> below were fitted to a score distribution this checkpoint no longer has. They
+> are recorded for provenance, **must not be used for the test evaluation**, and
+> will be re-derived on the final checkpoint before it is run. The verification
+> that `test_model.py` correctly consumes a policy (§5 of
+> `PRE_TEST_PREFLIGHT.md`) used this file and remains valid — the mechanism is
+> sound, only these particular numbers are superseded.
 
 `data/checkpoints/decision_policy.json`
 
@@ -314,10 +364,11 @@ No result in this document may be attributed to any of these.
 
 ## 10. Remaining steps
 
-1. Finish training (resumed; epoch 2 of 3 at time of writing)
+1. Finish training (epoch 3 of 3 running at time of writing; epoch 2 improved
+   on epoch 1, see §4c)
 2. **Re-run threshold + calibration on the final best checkpoint** — the policy
-   in §6 was fitted to the epoch-1 checkpoint and becomes stale if training
-   produces a better one
+   in §6 is now confirmed stale, because epoch 2 overwrote `best_codebert.pt`.
+   This is no longer conditional; it must happen before step 3.
 3. One test evaluation with `--save-predictions`
 4. Hybrids, error analysis, sensitivity analysis, ablations — all from saved
    predictions, so test is scored exactly once
