@@ -252,19 +252,16 @@
 <div class="p-4 flex-1 flex flex-col gap-4">
 <!-- Source Selection -->
 <div class="flex p-1 bg-black/40 rounded-lg border border-[#222]">
-<button class="flex-1 py-1.5 text-sm font-medium rounded-md bg-white/10 text-on-surface shadow-sm">Paste Code</button>
-<button class="flex-1 py-1.5 text-sm font-medium rounded-md text-on-surface-variant hover:text-on-surface transition-colors">Upload File</button>
+<button id="cs-tab-paste" type="button" class="flex-1 py-1.5 text-sm font-medium rounded-md bg-white/10 text-on-surface shadow-sm">Paste Code</button>
+<button id="cs-tab-upload" type="button" class="flex-1 py-1.5 text-sm font-medium rounded-md text-on-surface-variant hover:text-on-surface transition-colors">Upload File</button>
 </div>
 <!-- Language & Filename -->
 <div class="grid grid-cols-2 gap-4 mt-2">
 <div class="flex flex-col gap-1.5">
 <label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Language</label>
 <div class="relative">
-<select class="w-full bg-[#0A0A0A] border border-[#222] rounded text-on-surface py-2 pl-3 pr-8 appearance-none focus:outline-none focus:border-primary-container transition-colors font-code-md text-[13px]">
-<option>C++</option>
-<option>Python</option>
-<option>JavaScript</option>
-<option>Go</option>
+<select id="cs-language" class="w-full bg-[#0A0A0A] border border-[#222] rounded text-on-surface py-2 pl-3 pr-8 appearance-none focus:outline-none focus:border-primary-container transition-colors font-code-md text-[13px]">
+<option value="">Loading languages...</option>
 </select>
 <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">arrow_drop_down</span>
 </div>
@@ -288,7 +285,7 @@
 <div class="flex flex-col gap-1.5">
 <label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Detection Model</label>
 <div class="px-3 py-2 bg-black/40 border border-[#222] rounded text-on-surface font-code-md text-[13px] flex items-center justify-between">
-<span>CodeSentinel R-GCN</span>
+<span>Rules + Taint (static analysis)</span>
 <span class="w-2 h-2 rounded-full bg-secondary-fixed"></span>
 </div>
 </div>
@@ -361,7 +358,7 @@
 <span>7</span>
 </div>
 <!-- Code Area -->
-<div class="flex-1 p-4 overflow-auto font-code-md text-[14px] leading-relaxed text-[#e5e2e1] whitespace-pre cursor-text outline-none drop-shadow-md" contenteditable="true" spellcheck="false">
+<div id="cs-code-editor" class="flex-1 p-4 overflow-auto font-code-md text-[14px] leading-relaxed text-[#e5e2e1] whitespace-pre cursor-text outline-none drop-shadow-md" contenteditable="true" spellcheck="false">
 <span class="text-[#7701d0]">#include</span> <span class="text-[#00f0ff]">&lt;cstring&gt;</span>
 <span class="text-secondary">void</span> <span class="text-[#00dbe9]">process</span>(<span class="text-secondary">char*</span> input) {
     <span class="text-secondary">char</span> buffer[<span class="text-[#ffdbce]">64</span>];
@@ -376,16 +373,28 @@
 <div class="glass-panel rounded-xl p-4 flex items-center justify-between shrink-0">
 <div class="flex items-center gap-3">
 <span class="material-symbols-outlined text-on-surface-variant">memory</span>
-<span class="font-body-md text-on-surface-variant">Ready to process source file</span>
+<span id="cs-status-line" class="font-body-md text-on-surface-variant">Ready to process source file</span>
 </div>
-<button class="bg-primary-container text-black font-headline-md text-[16px] font-bold px-8 py-3 rounded hover:bg-[#7df4ff] transition-all duration-300 flex items-center gap-2 shadow-[0_0_15px_rgba(0,240,255,0.2)] hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] transform hover:-translate-y-0.5">
+<button id="cs-analyze-button" type="button" class="bg-primary-container text-black font-headline-md text-[16px] font-bold px-8 py-3 rounded hover:bg-[#7df4ff] transition-all duration-300 flex items-center gap-2 shadow-[0_0_15px_rgba(0,240,255,0.2)] hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] transform hover:-translate-y-0.5">
 <span class="material-symbols-outlined">troubleshoot</span>
-                                Analyze Code
-                            </button>
+<span id="cs-analyze-label">Analyze Code</span>
+</button>
 </div>
 </div>
 </div>
 </div>
+<!-- File upload row (hidden unless the Upload File tab is active) -->
+<div id="cs-file-row" class="hidden glass-panel rounded-xl p-4 mb-4 shrink-0 flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant">upload_file</span>
+<input id="cs-file-input" type="file" accept=".c,.h,.cpp,.cc,.cxx,.hpp,.hh,.py,.js,.mjs,.cjs,.java" class="flex-1 font-body-md text-[13px] text-on-surface-variant file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-primary-container file:text-black file:font-bold file:cursor-pointer"/>
+<input id="cs-filename" type="hidden" value=""/>
+</div>
+<!-- Results: populated only from backend responses -->
+<section class="glass-panel rounded-xl p-4 mb-4 overflow-auto" aria-live="polite">
+<h3 class="font-headline-md text-[16px] font-bold text-on-surface mb-3">Analysis Results</h3>
+<div id="cs-results"></div>
+</section>
+<script type="module" src="../assets/js/analyze-page.js"></script>
 </main>
 </div>
 </body></html>

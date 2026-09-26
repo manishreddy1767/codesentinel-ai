@@ -23,22 +23,79 @@ from backend.ml.utils.seed import set_seed
 
 
 class _Subset:
-    """Tiny head-of-dataset view used by --limit-* for smoke runs."""
+    """
+    Small view of a dataset, used by --limit-* for smoke and tuning runs.
 
-    def __init__(self, dataset, limit: int):
+    Stratified by default. Taking the head of the file, as this used to, is
+    only safe if the file happens to be shuffled: PrimeVul-derived splits are
+    grouped by project and by paired vulnerable/fixed functions, so a head
+    slice can easily come back with almost no positives - or none at all, which
+    silently drives pos_weight to 1.0 and makes an "overfit test" prove nothing.
+
+    The selection is seeded, so every trial in a tuning sweep sees exactly the
+    same subset and trials stay comparable.
+    """
+
+    def __init__(
+        self,
+        dataset,
+        limit: int,
+        seed: int = config.SEED,
+        stratified: bool = True,
+    ):
+        import random as _random
+
         self.dataset = dataset
         self.limit = min(limit, len(dataset))
+
+        targets = list(dataset.targets)
+
+        if not stratified:
+            self.indices = list(range(self.limit))
+        else:
+            positives = [i for i, t in enumerate(targets) if t == 1]
+            negatives = [i for i, t in enumerate(targets) if t != 1]
+
+            rng = _random.Random(seed)
+            rng.shuffle(positives)
+            rng.shuffle(negatives)
+
+            # Preserve the real class ratio, but guarantee at least one of each
+            # class whenever the source has one, so the subset is trainable and
+            # its validation metrics are defined.
+            wanted_positive = round(self.limit * len(positives) / max(1, len(targets)))
+            wanted_positive = max(1 if positives else 0, wanted_positive)
+            wanted_positive = min(wanted_positive, len(positives), self.limit)
+
+            wanted_negative = self.limit - wanted_positive
+            wanted_negative = min(wanted_negative, len(negatives))
+
+            chosen = positives[:wanted_positive] + negatives[:wanted_negative]
+
+            # Top up from whatever is left if one class ran out.
+            if len(chosen) < self.limit:
+                remaining = [
+                    i
+                    for i in positives[wanted_positive:] + negatives[wanted_negative:]
+                ]
+                chosen.extend(remaining[: self.limit - len(chosen)])
+
+            rng.shuffle(chosen)
+            self.indices = chosen
+            self.limit = len(chosen)
+
+        self.targets = [targets[i] for i in self.indices]
+        self.chunk_counts = [dataset.chunk_counts[i] for i in self.indices]
 
     def __len__(self):
         return self.limit
 
     def __getitem__(self, index):
-        return self.dataset[index]
+        return self.dataset[self.indices[index]]
 
     def class_counts(self):
-        targets = self.dataset.targets[: self.limit]
-        positives = sum(targets)
-        return len(targets) - positives, positives
+        positives = sum(self.targets)
+        return len(self.targets) - positives, positives
 
     def pos_weight(self, cap: float | None = None):
         negatives, positives = self.class_counts()
@@ -49,13 +106,27 @@ class _Subset:
         return min(negatives / positives, cap or config.MAX_POS_WEIGHT)
 
     def total_chunks(self):
-        return sum(self.dataset.chunk_counts[: self.limit])
+        return sum(self.chunk_counts)
 
 
 def build_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument("--chunked-dir", type=Path, default=config.CHUNKED_DIR)
+    parser.add_argument(
+        "--train-file",
+        type=Path,
+        default=None,
+        help=(
+            "Override the chunked training file, e.g. an undersampled one. "
+            "Validation always comes from --chunked-dir so it keeps the real "
+            "class balance."
+        ),
+    )
+    parser.add_argument(
+        "--dropout", type=float, default=config.CLASSIFIER_DROPOUT
+    )
+    parser.add_argument("--monitor", default=config.EARLY_STOPPING_MONITOR)
     parser.add_argument("--checkpoint-dir", type=Path, default=config.CHECKPOINT_DIR)
     parser.add_argument("--model", default=config.MODEL_NAME)
 
@@ -96,6 +167,14 @@ def build_argparser() -> argparse.ArgumentParser:
     parser.add_argument("--no-amp", action="store_true")
     parser.add_argument("--no-grad-checkpointing", action="store_true")
     parser.add_argument("--cpu", action="store_true", help="Force CPU")
+    parser.add_argument(
+        "--pin-memory",
+        action="store_true",
+        help=(
+            "Opt in to pinned host memory. OFF by default: it has aborted two "
+            "long runs on this hardware from inside its own free()."
+        ),
+    )
 
     parser.add_argument("--limit-train", type=int, default=0)
     parser.add_argument("--limit-valid", type=int, default=0)
@@ -126,9 +205,11 @@ def main() -> None:
     # ---- data ---------------------------------------------------------
     print("\nLoading chunked datasets...")
 
-    train_dataset = ChunkedFunctionDataset(
+    train_file = args.train_file or (
         args.chunked_dir / "primevul_train_chunked.jsonl"
     )
+    print(f"  train file: {train_file}")
+    train_dataset = ChunkedFunctionDataset(train_file)
     valid_dataset = ChunkedFunctionDataset(
         args.chunked_dir / "primevul_valid_chunked.jsonl"
     )
@@ -137,11 +218,11 @@ def main() -> None:
     print(f"  valid: {len(valid_dataset)} functions")
 
     if args.limit_train:
-        train_dataset = _Subset(train_dataset, args.limit_train)
+        train_dataset = _Subset(train_dataset, args.limit_train, seed=args.seed)
         print(f"  train limited to {len(train_dataset)} functions")
 
     if args.limit_valid:
-        valid_dataset = _Subset(valid_dataset, args.limit_valid)
+        valid_dataset = _Subset(valid_dataset, args.limit_valid, seed=args.seed)
         print(f"  valid limited to {len(valid_dataset)} functions")
 
     # ---- tokenizer / collate -------------------------------------------
@@ -160,6 +241,7 @@ def main() -> None:
 
     model = HierarchicalCodeBERTClassifier(
         model_name=args.model,
+        dropout=args.dropout,
         gradient_checkpointing=(
             config.USE_GRADIENT_CHECKPOINTING and not args.no_grad_checkpointing
         ),
@@ -194,6 +276,8 @@ def main() -> None:
         patience=args.patience,
         seed=args.seed,
         high_loss_threshold=args.high_loss_threshold,
+        monitor=args.monitor,
+        pin_memory=args.pin_memory,
     )
 
     trainer.maybe_resume(resume=args.resume)

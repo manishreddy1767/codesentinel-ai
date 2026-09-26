@@ -360,6 +360,12 @@ python -m backend.ml.preprocessing.inspect_dataset
 python -m backend.ml.preprocessing.validate_dataset
 python -m backend.ml.preprocessing.validate_dataset --strict   # fail on leakage
 
+# 2b. Full multi-dimensional leakage audit (code AND upstream identity AND project)
+python -m backend.ml.preprocessing.audit_splits --dir data/raw --strict     --json artifacts/reports/leakage_raw.json
+
+# 2c. If leakage is found: remove the offending records from TRAIN only
+python -m backend.ml.preprocessing.clean_split_duplicates     --in-dir data/processed --out-dir data/processed_clean --dry-run
+
 # 3. Normalise into data/processed/ (train-only dedupe)
 python -m backend.ml.preprocessing.preprocess_primevul
 
@@ -377,15 +383,34 @@ python -m backend.ml.preprocessing.analyze_token_lengths
 python -m backend.ml.preprocessing.chunk_dataset
 python -m backend.ml.preprocessing.chunk_dataset --use-balanced-train
 
-# 7. Train
+# 6b. Overfit test - MUST pass before anything expensive (Stage J)
+python -m backend.ml.training.overfit_test --samples 32
+
+# 7. Hyperparameter search on VALIDATION only (Stage M)
+#    Objective is validation PR-AUC, which is threshold-free.
+python -m backend.ml.tuning.tune --trials 3 --epochs 1     --limit-train 400 --limit-valid 200          # smoke search first
+python -m backend.ml.tuning.tune --trials 20 --epochs 3
+python -m backend.ml.tuning.tune --trials 30 --epochs 3 --search-architecture
+
+# 8. Train once with the winning configuration (Stage P)
 python -m backend.ml.training.train
 python -m backend.ml.training.train --epochs 3 --batch-size 4
 python -m backend.ml.training.train --resume
 
-# 8. Final held-out test evaluation
-python -m backend.ml.evaluation.test_model
-python -m backend.ml.evaluation.test_model --save-report data/test_report.json
+# 9. Freeze the decision policy on VALIDATION (Stages N + O)
+python -m backend.ml.evaluation.select_threshold
+python -m backend.ml.evaluation.select_threshold --objective fbeta --beta 2
+python -m backend.ml.evaluation.select_threshold     --objective recall_at_precision --min-precision 0.6
+
+# 10. Final held-out test evaluation - run EXACTLY ONCE (Stage Q)
+python -m backend.ml.evaluation.test_model     --policy data/checkpoints/decision_policy.json     --save-report artifacts/reports/test_report.json
 ```
+
+Steps 7-10 exist to keep model selection off the test split. Hyperparameters,
+the operating threshold and any calibration are all chosen on validation; the
+test split is read once, at step 10, after everything is frozen. Repeat test
+evaluations are appended to `artifacts/test_evaluations.jsonl` so that
+selecting on test cannot happen invisibly.
 
 Smoke run on a few hundred samples (no GPU needed):
 
@@ -397,7 +422,7 @@ python -m backend.ml.training.train \
 Tests:
 
 ```bash
-python -m pytest backend/tests/test_ml_pipeline.py -v
+python -m pytest backend/tests/test_ml_pipeline.py backend/tests/test_ml_stages.py -v
 ```
 
 ---
@@ -409,7 +434,9 @@ backend/ml/
 ├── config.py                       central config, all env-overridable
 ├── preprocessing/
 │   ├── inspect_dataset.py          stage 1  raw inspection
-│   ├── validate_dataset.py         stage 2  validation + leakage check
+│   ├── validate_dataset.py         stage 2  validation + content leakage check
+│   ├── audit_splits.py             stage 2b multi-dimension leakage audit
+│   ├── clean_split_duplicates.py   stage 2c remove leaked records from TRAIN only
 │   ├── preprocess_primevul.py      stage 3  normalise -> data/processed/
 │   ├── balance_dataset.py          stage 4  distribution + optional undersample
 │   ├── chunk_dataset.py            stage 5  tokenize + chunk -> data/chunked/
@@ -421,16 +448,24 @@ backend/ml/
 │   ├── collate.py                  variable-chunk collate
 │   └── codebert_classifier.py      HierarchicalCodeBERTClassifier
 ├── training/
-│   ├── metrics.py                  metrics + threshold search
-│   ├── checkpoint.py               save/load + ResumableSampler
+│   ├── metrics.py                  metrics (incl. PR-AUC/Brier/MCC) + threshold sweep
+│   ├── checkpoint.py               save/load + RNG state + ResumableSampler
 │   ├── trainer.py                  training loop
-│   └── train.py                    CLI entrypoint
+│   ├── train.py                    CLI entrypoint
+│   ├── overfit_test.py             stage J  tiny-subset memorisation check
+│   └── memory_probe.py             stage I  measured GPU memory / safe defaults
+├── tuning/
+│   ├── space.py                    search space definition
+│   └── tune.py                     stage M  Optuna or seeded random search
 ├── evaluation/
 │   ├── evaluator.py                shared inference
-│   └── test_model.py               final test CLI
+│   ├── calibration.py              stage O  Brier/ECE, Platt + isotonic
+│   ├── select_threshold.py         stage N  freeze threshold + calibration
+│   └── test_model.py               stage Q  final test CLI (one shot)
 └── utils/
     ├── seed.py                     reproducible seeding
     ├── io.py                       JSONL helpers
+    ├── experiment.py               run records, env snapshot, event log
     └── gpu.py                      memory reporting / device resolution
 ```
 

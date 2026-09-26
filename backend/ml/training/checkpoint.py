@@ -74,6 +74,69 @@ class ResumableSampler(Sampler):
         return max(0, len(self.data_source) - self.skip)
 
 
+def _capture_rng_state() -> dict:
+    """
+    Snapshot every RNG that affects training.
+
+    ResumableSampler already makes the *data order* a pure function of
+    (seed, epoch), but dropout, and any other stochastic layer, draws from the
+    global torch RNG. Without this snapshot a resumed run re-draws a different
+    dropout mask sequence, so resume is close but not exact.
+    """
+
+    import random
+
+    state = {
+        "python": random.getstate(),
+        "torch": torch.get_rng_state(),
+    }
+
+    try:
+        import numpy as np
+
+        state["numpy"] = np.random.get_state()
+    except ImportError:
+        pass
+
+    if torch.cuda.is_available():
+        state["cuda"] = torch.cuda.get_rng_state_all()
+
+    return state
+
+
+def restore_rng_state(state: dict | None) -> bool:
+    """Restore a snapshot from ``_capture_rng_state``. Returns True if applied."""
+
+    if not state:
+        return False
+
+    import random
+
+    if "python" in state:
+        random.setstate(state["python"])
+
+    if "torch" in state:
+        # The saved tensor may arrive on a different device after map_location;
+        # set_rng_state insists on a CPU ByteTensor.
+        torch.set_rng_state(state["torch"].cpu().to(torch.uint8))
+
+    if "numpy" in state:
+        try:
+            import numpy as np
+
+            np.random.set_state(state["numpy"])
+        except ImportError:
+            pass
+
+    # Only restorable when the device count matches the machine that saved it.
+    if "cuda" in state and torch.cuda.is_available():
+        saved = state["cuda"]
+        if len(saved) == torch.cuda.device_count():
+            torch.cuda.set_rng_state_all([s.cpu().to(torch.uint8) for s in saved])
+
+    return True
+
+
 def save_checkpoint(
     path: Path,
     model,
@@ -94,6 +157,25 @@ def save_checkpoint(
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
+    # Data-shape settings are genuinely global (they describe the chunked files
+    # on disk), but the architecture must come from the model instance. Reading
+    # it from the module-level config recorded whatever the environment happened
+    # to say, so a model built with function_pooling="attention" under a "mean"
+    # environment was saved as "mean" and silently rebuilt as the wrong
+    # architecture by load_model_from_checkpoint.
+    saved_config = {
+        "model_name": config.MODEL_NAME,
+        "max_length": config.MAX_LENGTH,
+        "chunk_overlap": config.CHUNK_OVERLAP,
+        "max_chunks": config.MAX_CHUNKS_PER_FUNCTION,
+        "chunk_pooling": config.CHUNK_POOLING,
+        "function_pooling": config.FUNCTION_POOLING,
+        "seed": config.SEED,
+    }
+
+    if hasattr(model, "arch_config"):
+        saved_config.update(model.arch_config())
+
     payload = {
         "model_state": model.state_dict(),
         "optimizer_state": optimizer.state_dict() if optimizer else None,
@@ -106,15 +188,8 @@ def save_checkpoint(
         "best_threshold": best_threshold,
         "epochs_without_improvement": epochs_without_improvement,
         "metrics": metrics or {},
-        "config": {
-            "model_name": config.MODEL_NAME,
-            "max_length": config.MAX_LENGTH,
-            "chunk_overlap": config.CHUNK_OVERLAP,
-            "max_chunks": config.MAX_CHUNKS_PER_FUNCTION,
-            "chunk_pooling": config.CHUNK_POOLING,
-            "function_pooling": config.FUNCTION_POOLING,
-            "seed": config.SEED,
-        },
+        "config": saved_config,
+        "rng_state": _capture_rng_state(),
         "extra": extra or {},
     }
 

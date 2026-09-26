@@ -16,7 +16,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.utils.data import DataLoader
 
 from backend.ml import config
@@ -51,6 +51,13 @@ class Trainer:
         patience: int = config.EARLY_STOPPING_PATIENCE,
         seed: int = config.SEED,
         high_loss_threshold: float = config.HIGH_LOSS_THRESHOLD,
+        monitor: str = config.EARLY_STOPPING_MONITOR,
+        min_delta: float = config.EARLY_STOPPING_MIN_DELTA,
+        threshold_objective: str = config.THRESHOLD_OBJECTIVE,
+        threshold_beta: float = config.THRESHOLD_BETA,
+        threshold_min_precision: float = config.THRESHOLD_MIN_PRECISION,
+        restore_best: bool = True,
+        pin_memory: bool | None = None,
     ):
         self.model = model.to(device)
         self.device = device
@@ -77,6 +84,32 @@ class Trainer:
         self.patience = patience
         self.seed = seed
         self.high_loss_threshold = high_loss_threshold
+
+        if monitor not in ("pr_auc", "f1", "mcc", "roc_auc"):
+            raise ValueError(f"Unknown early-stopping monitor: {monitor}")
+
+        self.monitor = monitor
+        self.min_delta = float(min_delta)
+        self.threshold_objective = threshold_objective
+        self.threshold_beta = threshold_beta
+        self.threshold_min_precision = threshold_min_precision
+        self.restore_best = restore_best
+
+        # Pinned (page-locked) host memory speeds host->device copies, but it
+        # is a scarce OS resource and PyTorch's host caching allocator does not
+        # reliably release it. On this project's hardware it has now aborted
+        # two separate long runs from inside its own free(), as an unhandled
+        # C++ exception rather than a catchable Python error:
+        #
+        #   tuning sweep, trial 3  -> "Exception in pinned allocator free()"
+        #   final training, batch 2500 -> CUBLAS_STATUS_EXECUTION_FAILED,
+        #                                 then the same allocator abort
+        #
+        # A crash that destroys hours of training is far more expensive than
+        # the small transfer speedup, so it defaults OFF here and is opt-in.
+        # The bottleneck in this pipeline is encoder compute, not H2D copies:
+        # a batch of 8 functions moves ~14 chunks of int64 ids, which is tiny.
+        self.pin_memory = False if pin_memory is None else bool(pin_memory)
 
         # AMP only makes sense on CUDA; on CPU it is disabled outright so the
         # same code path runs unchanged on a laptop.
@@ -113,10 +146,33 @@ class Trainer:
         self.start_epoch = 0
         self.start_batch = 0
         self.global_step = 0
-        self.best_f1 = -1.0
+        self.best_score = -1.0
+        self.best_epoch = -1
         self.best_threshold = config.DEFAULT_THRESHOLD
         self.epochs_without_improvement = 0
         self.history = []
+
+        # OOM resilience counters, surfaced in the epoch summary so a run that
+        # quietly dropped batches cannot be mistaken for a clean one.
+        self.oom_retries = 0
+        self.skipped_batches = 0
+
+    @property
+    def best_f1(self) -> float:
+        """
+        Backwards-compatible alias for ``best_score``.
+
+        Early stopping is no longer necessarily driven by F1 (``monitor``
+        defaults to PR-AUC), but the attribute name, the checkpoint key and
+        the ``fit()`` result key are all long-lived contracts, so the alias
+        stays. Read ``monitor`` to learn which metric the number actually is.
+        """
+
+        return self.best_score
+
+    @best_f1.setter
+    def best_f1(self, value: float) -> None:
+        self.best_score = value
 
     # ------------------------------------------------------------------
     # Setup helpers
@@ -168,7 +224,7 @@ class Trainer:
             sampler=self.train_sampler,
             collate_fn=self.collate_fn,
             num_workers=self.num_workers,
-            pin_memory=(self.device.type == "cuda"),
+            pin_memory=self.pin_memory,
             drop_last=False,
         )
 
@@ -180,7 +236,7 @@ class Trainer:
             shuffle=False,
             collate_fn=self.collate_fn,
             num_workers=self.num_workers,
-            pin_memory=(self.device.type == "cuda"),
+            pin_memory=self.pin_memory,
             drop_last=False,
         )
 
@@ -223,8 +279,17 @@ class Trainer:
         self.epochs_without_improvement = payload.get(
             "epochs_without_improvement", 0
         )
+        self.best_epoch = payload.get("extra", {}).get("best_epoch", -1)
+
+        # ResumableSampler already makes the data order exact; this restores the
+        # dropout/init RNG stream so the resumed run continues the same
+        # trajectory rather than a merely statistically-similar one.
+        rng_restored = ckpt.restore_rng_state(payload.get("rng_state"))
 
         print("RESUMED from checkpoint:")
+        print(
+            f"  RNG state: {'restored' if rng_restored else 'ABSENT (pre-RNG checkpoint)'}"
+        )
         print("  " + ckpt.describe_checkpoint(payload))
         print(
             f"  Skipping the first {self.start_batch} batches of epoch "
@@ -243,9 +308,16 @@ class Trainer:
             epoch=epoch,
             global_step=self.global_step,
             batch_in_epoch=batch_in_epoch,
-            best_f1=self.best_f1,
+            best_f1=self.best_score,
             best_threshold=self.best_threshold,
             epochs_without_improvement=self.epochs_without_improvement,
+            # Carried on the latest checkpoint too, not just the best one, so a
+            # resumed run can still report which epoch the incumbent came from.
+            extra={
+                "monitor": self.monitor,
+                "best_score": self.best_score,
+                "best_epoch": self.best_epoch,
+            },
         )
 
     # ------------------------------------------------------------------
@@ -297,6 +369,76 @@ class Trainer:
     # Train / evaluate
     # ------------------------------------------------------------------
 
+    def _forward_with_oom_retry(self, batch, targets, batch_size):
+        """
+        Forward + loss, retrying at a smaller chunk micro-batch after an OOM.
+
+        Returns ``(logits, per_sample_loss, loss)``, or None if every attempt
+        ran out of memory and the batch has to be skipped.
+
+        Only the micro-batch is reduced. Reducing the *batch* would silently
+        change the effective batch size mid-epoch, and dropping chunks would
+        silently change the input the label refers to.
+        """
+
+        original_micro_batch = getattr(self.model, "chunk_micro_batch", None)
+        attempts = [original_micro_batch]
+
+        if original_micro_batch:
+            attempts += [
+                m for m in (original_micro_batch // 2, original_micro_batch // 4, 1)
+                if m >= 1 and m < original_micro_batch
+            ]
+
+        for attempt, micro_batch in enumerate(dict.fromkeys(attempts)):
+            try:
+                if micro_batch is not None:
+                    self.model.chunk_micro_batch = micro_batch
+
+                with torch.amp.autocast("cuda", enabled=self.use_amp):
+                    logits = self.model(
+                        input_ids=batch["input_ids"],
+                        attention_mask=batch["attention_mask"],
+                        function_index=batch["function_index"],
+                        batch_size=batch_size,
+                    )
+
+                    # The contract the whole pipeline depends on.
+                    assert logits.shape == targets.shape, (
+                        f"logits {tuple(logits.shape)} != targets "
+                        f"{tuple(targets.shape)}"
+                    )
+
+                    per_sample_loss = self.criterion(logits, targets)
+                    loss = per_sample_loss.mean()
+
+                if attempt:
+                    self.oom_retries += 1
+                    print(
+                        f"  [oom] recovered at chunk_micro_batch={micro_batch} "
+                        f"({batch['input_ids'].size(0)} chunks)",
+                        flush=True,
+                    )
+
+                return logits, per_sample_loss, loss
+
+            except torch.cuda.OutOfMemoryError:
+                self.optimizer.zero_grad(set_to_none=True)
+                torch.cuda.empty_cache()
+                continue
+            finally:
+                if original_micro_batch is not None:
+                    self.model.chunk_micro_batch = original_micro_batch
+
+        print(
+            f"  [oom] SKIPPING a batch of {batch['input_ids'].size(0)} chunks: "
+            f"out of memory even at chunk_micro_batch=1",
+            flush=True,
+        )
+        torch.cuda.empty_cache()
+
+        return None
+
     def train_epoch(self, epoch: int, skip_batches: int = 0) -> dict:
         self.model.train()
         reset_peak_memory()
@@ -316,22 +458,18 @@ class Trainer:
             targets = batch["targets"]
             batch_size = targets.size(0)
 
-            with torch.amp.autocast("cuda", enabled=self.use_amp):
-                logits = self.model(
-                    input_ids=batch["input_ids"],
-                    attention_mask=batch["attention_mask"],
-                    function_index=batch["function_index"],
-                    batch_size=batch_size,
-                )
+            # A batch whose functions happen to all sit near the chunk cap can
+            # be several times the average size. On a small card that single
+            # batch can OOM and destroy a multi-hour run, so it is retried with
+            # a smaller chunk micro-batch before being given up on. Skipping is
+            # the last resort and is counted, never silent.
+            outcome = self._forward_with_oom_retry(batch, targets, batch_size)
 
-                # The contract the whole pipeline depends on.
-                assert logits.shape == targets.shape, (
-                    f"logits {tuple(logits.shape)} != targets {tuple(targets.shape)}"
-                )
+            if outcome is None:
+                self.skipped_batches += 1
+                continue
 
-                per_sample_loss = self.criterion(logits, targets)
-                loss = per_sample_loss.mean()
-
+            logits, per_sample_loss, loss = outcome
             loss_value = loss.item()
 
             # Only genuinely unrecoverable numerics abort the run.
@@ -353,7 +491,12 @@ class Trainer:
 
             self.scaler.scale(loss / self.grad_accum_steps).backward()
 
-            is_step_boundary = (offset + 1) % self.grad_accum_steps == 0
+            # Keyed to the absolute position in the epoch, not the position in
+            # this (possibly resumed) loader. With `offset`, resuming at batch
+            # 37 with grad_accum=4 put the step boundaries on a different
+            # phase than the original run, so a resumed epoch took a different
+            # number of optimizer steps than an uninterrupted one.
+            is_step_boundary = (batch_index + 1) % self.grad_accum_steps == 0
             is_last_batch = offset + 1 == len(loader)
 
             if is_step_boundary or is_last_batch:
@@ -406,6 +549,8 @@ class Trainer:
             "loss": running_loss / max(1, seen_batches),
             "batches": seen_batches,
             "seconds": elapsed,
+            "oom_retries": self.oom_retries,
+            "skipped_batches": self.skipped_batches,
         }
 
     @torch.no_grad()
@@ -492,31 +637,62 @@ class Trainer:
             print("\n" + default_metrics.format("VALIDATION @ threshold 0.5"))
 
             tuned_threshold, tuned_metrics, _ = find_best_threshold(
-                probabilities, targets
+                probabilities,
+                targets,
+                objective=self.threshold_objective,
+                beta=self.threshold_beta,
+                min_precision=self.threshold_min_precision,
             )
             print(
                 "\n"
                 + tuned_metrics.format(
                     f"VALIDATION @ tuned threshold {tuned_threshold:.3f}"
+                    f" (objective={self.threshold_objective})"
                 )
             )
+
+            # The monitored score is read off the threshold-tuned metrics, but
+            # for pr_auc/roc_auc it is threshold-free, so the tuning cannot
+            # influence it.
+            score = getattr(tuned_metrics, self.monitor)
+
+            if not math.isfinite(score):
+                # A single-class validation split makes the AUCs NaN, and NaN
+                # loses every comparison, so early stopping would silently fire
+                # on epoch one. Fail loudly instead.
+                raise RuntimeError(
+                    f"Validation {self.monitor} is {score}. This usually means "
+                    f"the validation split contains a single class. Early "
+                    f"stopping cannot proceed."
+                )
 
             self.history.append(
                 {
                     "epoch": epoch + 1,
                     "train_loss": stats["loss"],
+                    "train_seconds": stats["seconds"],
+                    "monitor": self.monitor,
+                    "monitor_score": float(score),
                     "valid_f1_at_0.5": default_metrics.f1,
                     "valid_f1_tuned": tuned_metrics.f1,
+                    "valid_pr_auc": tuned_metrics.pr_auc,
+                    "valid_roc_auc": tuned_metrics.roc_auc,
+                    "valid_precision": tuned_metrics.precision,
+                    "valid_recall": tuned_metrics.recall,
+                    "valid_brier": tuned_metrics.brier,
                     "tuned_threshold": tuned_threshold,
                 }
             )
 
             # ---- best model selection / early stopping ---------------------
-            improved = tuned_metrics.f1 > self.best_f1
+            # min_delta: an epoch has to beat the incumbent by a real margin,
+            # otherwise float noise keeps resetting the patience counter.
+            improved = score > self.best_score + self.min_delta
 
             if improved:
-                self.best_f1 = tuned_metrics.f1
+                self.best_score = float(score)
                 self.best_threshold = tuned_threshold
+                self.best_epoch = epoch + 1
                 self.epochs_without_improvement = 0
 
                 ckpt.save_checkpoint(
@@ -524,20 +700,26 @@ class Trainer:
                     self.model,
                     epoch=epoch,
                     global_step=self.global_step,
-                    best_f1=self.best_f1,
+                    best_f1=self.best_score,
                     best_threshold=self.best_threshold,
                     metrics=tuned_metrics.to_dict(),
-                    extra={"pos_weight": self.pos_weight_value},
+                    extra={
+                        "pos_weight": self.pos_weight_value,
+                        "monitor": self.monitor,
+                        "best_score": self.best_score,
+                        "best_epoch": self.best_epoch,
+                        "threshold_objective": self.threshold_objective,
+                    },
                 )
                 print(
-                    f"\n  NEW BEST validation F1 {self.best_f1:.4f} "
+                    f"\n  NEW BEST validation {self.monitor} {self.best_score:.4f} "
                     f"(threshold {self.best_threshold:.3f}) -> {self.best_path}"
                 )
             else:
                 self.epochs_without_improvement += 1
                 print(
-                    f"\n  No improvement ({tuned_metrics.f1:.4f} <= "
-                    f"{self.best_f1:.4f}). "
+                    f"\n  No improvement in {self.monitor} "
+                    f"({score:.4f} <= {self.best_score:.4f} + {self.min_delta:g}). "
                     f"Patience {self.epochs_without_improvement}/{self.patience}"
                 )
 
@@ -548,21 +730,77 @@ class Trainer:
 
             if self.epochs_without_improvement >= self.patience:
                 print(
-                    f"\nEARLY STOPPING: no validation F1 improvement for "
-                    f"{self.patience} epoch(s)."
+                    f"\nEARLY STOPPING: no validation {self.monitor} improvement "
+                    f"above {self.min_delta:g} for {self.patience} epoch(s). "
+                    f"Best was {self.best_score:.4f} at epoch {self.best_epoch}."
                 )
                 break
+
+        # ---- restore the best weights --------------------------------------
+        # Without this, self.model still holds the LAST epoch's weights. After
+        # early stopping those are by definition worse than the best epoch's,
+        # so any caller that evaluated the live model - rather than reloading
+        # best_codebert.pt by hand - was measuring the wrong thing.
+        restored = False
+
+        if self.restore_best and self.best_path.exists():
+            ckpt.load_checkpoint(
+                self.best_path, model=self.model, map_location=self.device
+            )
+            self.model.to(self.device)
+            restored = True
 
         print("\n" + "=" * 70)
         print("TRAINING COMPLETE")
         print("=" * 70)
-        print(f"  best validation F1 : {self.best_f1:.4f}")
+        print(f"  monitored metric   : {self.monitor}")
+        print(f"  best validation    : {self.best_score:.4f} (epoch {self.best_epoch})")
         print(f"  selected threshold : {self.best_threshold:.4f}")
         print(f"  best checkpoint    : {self.best_path}")
+        print(
+            f"  in-memory weights  : "
+            f"{'restored to best epoch' if restored else 'LAST epoch (not restored)'}"
+        )
 
-        return {
-            "best_f1": self.best_f1,
+        result = {
+            # Historical key name; holds the monitored score, see best_f1 alias.
+            "best_f1": self.best_score,
+            "best_score": self.best_score,
+            "monitor": self.monitor,
+            "best_epoch": self.best_epoch,
             "best_threshold": self.best_threshold,
+            "threshold_objective": self.threshold_objective,
+            "restored_best_weights": restored,
             "history": self.history,
             "best_checkpoint": str(self.best_path),
         }
+
+        self._write_history(result)
+
+        return result
+
+    def _write_history(self, result: dict) -> None:
+        """Persist per-epoch history next to the checkpoints, for the report."""
+
+        import json
+
+        path = self.checkpoint_dir / "training_history.json"
+
+        payload = {
+            "monitor": self.monitor,
+            "min_delta": self.min_delta,
+            "patience": self.patience,
+            "threshold_objective": self.threshold_objective,
+            "best_score": self.best_score,
+            "best_epoch": self.best_epoch,
+            "best_threshold": self.best_threshold,
+            "pos_weight": self.pos_weight_value,
+            "epochs_requested": self.epochs,
+            "history": result["history"],
+        }
+
+        try:
+            path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        except OSError as error:
+            # Losing the history file must never destroy a finished training run.
+            print(f"  WARNING: could not write {path}: {error}")

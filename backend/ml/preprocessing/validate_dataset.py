@@ -74,8 +74,15 @@ def validate_split(name: str, path: Path) -> dict:
     for _, record in read_jsonl(path, skip_invalid=True):
         total += 1
 
+        # Detected independently, and retried until each is found. Gating the
+        # label lookup behind `code_field is None` meant that a first record
+        # carrying code but no label pinned label_field to None for the rest of
+        # the file, and every subsequent record was miscounted as an invalid
+        # label rather than being read correctly.
         if code_field is None:
             code_field = detect_field(record, config.CODE_FIELD_CANDIDATES)
+
+        if label_field is None:
             label_field = detect_field(record, config.LABEL_FIELD_CANDIDATES)
 
         code = record.get(code_field) if code_field else None
