@@ -236,6 +236,36 @@ cannot distinguish "still improving" from "one lucky epoch".
 
 ---
 
+### How a longer run would be launched — MEASURED, not assumed
+
+Extending is a one-flag change, and it fixes the annealing problem at the same
+time. `Trainer` builds the LR schedule from `steps_per_epoch * epochs` and *then*
+restores `last_epoch` from the checkpoint, so raising `--epochs` re-plots the
+resumed step onto a longer curve rather than continuing the old one:
+
+| `--epochs` | total steps | LR at the resumed step 16,015 |
+|---|---|---|
+| **3** (current) | 22,896 | **6.03e-06** — annealing toward zero |
+| 4 | 30,528 | 9.54e-06 |
+| 6 | 45,792 | 1.31e-05 |
+| 10 (the paper's setting) | 76,320 | 1.59e-05 |
+
+Peak LR is 1.827e-05. The simulation reproduces the value actually recorded in
+the checkpoint at that step (6.0327e-06 against 6.033589e-06), which is why these
+are described as measured rather than estimated.
+
+`for epoch in range(self.start_epoch, self.epochs)` means a resume with
+`--epochs 6` continues as EPOCH 4/6 onward; it does not restart.
+
+**Consequence.** The underfitting diagnosis called for two changes — more epochs,
+and a schedule that stops annealing a model that is still improving. Raising
+`--epochs` delivers both, so the separate switch to `constant_with_warmup` is
+probably unnecessary. That is worth knowing before spending a run on it, since
+`constant_with_warmup` would also remove the decay that makes the final epochs
+stable.
+
+---
+
 ## 5. Calibration — MEASURED, adopted
 
 Fitted and judged **entirely inside validation**, by stratified K-fold so the
