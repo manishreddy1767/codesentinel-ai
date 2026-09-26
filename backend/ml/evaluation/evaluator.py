@@ -62,8 +62,26 @@ def evaluate_model(
             probabilities.cpu().tolist()
         )
 
+<<<<<<< ours
     return calculate_metrics(
         targets=all_targets,
         probabilities=all_probabilities,
         threshold=threshold,
     )
+=======
+    model = HierarchicalCodeBERTClassifier(
+        model_name=saved.get("model_name", config.MODEL_NAME),
+        chunk_pooling=saved.get("chunk_pooling", config.CHUNK_POOLING),
+        function_pooling=saved.get("function_pooling", config.FUNCTION_POOLING),
+        dropout=saved.get("dropout", config.CLASSIFIER_DROPOUT),
+        gradient_checkpointing=False,
+        chunk_micro_batch=chunk_micro_batch or config.CHUNK_MICRO_BATCH,
+    )
+
+    # strict=True: a checkpoint whose recorded architecture disagrees with its
+    # weights must fail loudly here rather than evaluate a half-loaded model.
+    model.load_state_dict(payload["model_state"], strict=True)
+    model.to(device)
+
+    return model, payload
+>>>>>>> theirs

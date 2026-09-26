@@ -159,6 +159,19 @@ GPU_LOG_EVERY = int(os.environ.get("CODESENTINEL_GPU_LOG_EVERY", 200))
 
 EARLY_STOPPING_PATIENCE = int(os.environ.get("CODESENTINEL_PATIENCE", 2))
 
+# Which validation metric drives early stopping and best-checkpoint selection.
+#
+# PR-AUC is the default rather than F1 for two reasons. It is threshold-free,
+# so the monitored number cannot jump around because the tuned threshold moved
+# between epochs; and under heavy class imbalance it degrades honestly where
+# ROC-AUC stays flatteringly high. One of "pr_auc", "f1", "mcc", "roc_auc".
+EARLY_STOPPING_MONITOR = os.environ.get("CODESENTINEL_MONITOR", "pr_auc")
+
+# An epoch must beat the best score by at least this much to count as an
+# improvement. Without it, noise of 1e-6 resets the patience counter and early
+# stopping effectively never fires.
+EARLY_STOPPING_MIN_DELTA = float(os.environ.get("CODESENTINEL_MIN_DELTA", 1e-4))
+
 # Per-sample loss above this prints a diagnostic line. Purely informational:
 # a high loss never stops training.
 HIGH_LOSS_THRESHOLD = float(os.environ.get("CODESENTINEL_HIGH_LOSS", 2.0))
@@ -175,6 +188,31 @@ DEFAULT_THRESHOLD = 0.5
 THRESHOLD_SEARCH_MIN = 0.05
 THRESHOLD_SEARCH_MAX = 0.95
 THRESHOLD_SEARCH_STEPS = 91
+
+# How the operating threshold is chosen from the validation sweep.
+#   "f1"                  - balanced
+#   "fbeta"               - recall weighted THRESHOLD_BETA times precision
+#   "mcc"                 - imbalance-robust
+#   "recall_at_precision" - max recall subject to precision >= the floor below
+#
+# For vulnerability triage a missed vulnerability is usually costlier than a
+# false alarm, but precision that is too low makes the tool ignored in practice.
+# The default stays "f1"; flip to "fbeta" or "recall_at_precision" deliberately.
+THRESHOLD_OBJECTIVE = os.environ.get("CODESENTINEL_THRESHOLD_OBJECTIVE", "f1")
+THRESHOLD_BETA = float(os.environ.get("CODESENTINEL_THRESHOLD_BETA", 2.0))
+THRESHOLD_MIN_PRECISION = float(
+    os.environ.get("CODESENTINEL_THRESHOLD_MIN_PRECISION", 0.5)
+)
+
+
+# ----------------------------------------------------------------------
+# Experiment artifacts (git-ignored)
+# ----------------------------------------------------------------------
+
+ARTIFACTS_DIR = _path_env("CODESENTINEL_ARTIFACTS_DIR", PROJECT_ROOT / "artifacts")
+EXPERIMENTS_DIR = ARTIFACTS_DIR / "experiments"
+TUNING_DIR = ARTIFACTS_DIR / "tuning"
+REPORTS_DIR = ARTIFACTS_DIR / "reports"
 
 
 def describe() -> str:

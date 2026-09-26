@@ -49,11 +49,8 @@ Thumbs.db
 # Cloned external datasets/repositories
 data/PrimeVul/
 
-# Machine learning checkpoints
-data/checkpoints/
-*.pt
-*.pth
-*.ckpt
-
-# Generated ML datasets
-data/autotrain/
+# Experiment artifacts: tuning trials, run records, per-run checkpoints,
+# frozen decision policies and the test-evaluation ledger. All regenerable,
+# and the checkpoints are far too large to commit.
+artifacts/
+*.jsonl.gz

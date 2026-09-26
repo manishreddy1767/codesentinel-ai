@@ -25,6 +25,71 @@ from backend.ml.utils.gpu import memory_report, resolve_device
 from backend.ml.utils.seed import set_seed
 
 
+def _record_test_evaluation(args, metrics) -> None:
+    """
+    Append this test evaluation to a durable ledger and flag repeats.
+
+    A held-out estimate is only unbiased if the split was consulted once, after
+    all selection was finished. Repeated evaluation of *different* checkpoints
+    is selection-on-test by another name, and it is invisible unless something
+    writes it down.
+    """
+
+    import hashlib
+    from datetime import datetime, timezone
+
+    ledger_path = config.ARTIFACTS_DIR / "test_evaluations.jsonl"
+
+    try:
+        digest = hashlib.sha256(args.checkpoint.read_bytes()).hexdigest()[:16]
+    except OSError:
+        digest = "unknown"
+
+    entry = {
+        "time": datetime.now(timezone.utc).isoformat(),
+        "checkpoint": str(args.checkpoint),
+        "checkpoint_sha256_16": digest,
+        "threshold": metrics.threshold,
+        "f1": metrics.f1,
+        "pr_auc": metrics.pr_auc,
+        "recall": metrics.recall,
+        "precision": metrics.precision,
+    }
+
+    previous = []
+
+    if ledger_path.exists():
+        for line in ledger_path.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                try:
+                    previous.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
+
+    try:
+        ledger_path.parent.mkdir(parents=True, exist_ok=True)
+        with ledger_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry) + "\n")
+    except OSError as error:
+        print(f"\n  WARNING: could not write the test-evaluation ledger: {error}")
+        return
+
+    distinct = {record.get("checkpoint_sha256_16") for record in previous}
+    distinct.discard("unknown")
+
+    if previous:
+        print(f"\n  Test-evaluation ledger: {ledger_path}")
+        print(f"    this is evaluation #{len(previous) + 1} of the test split")
+
+        if distinct - {digest}:
+            print(
+                "\n  WARNING: the test split has now been evaluated with more than\n"
+                "  one checkpoint. Whichever result you report was, to some degree,\n"
+                "  chosen with knowledge of the test set. Treat it as an optimistic\n"
+                "  estimate and say so in the write-up."
+            )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--checkpoint", type=Path, default=config.BEST_CHECKPOINT)
@@ -34,6 +99,15 @@ def main() -> None:
         default="test",
         choices=list(config.SPLITS),
         help="Which split to evaluate (default: test)",
+    )
+    parser.add_argument(
+        "--policy",
+        type=Path,
+        default=None,
+        help=(
+            "decision_policy.json frozen by select_threshold.py. Supplies the "
+            "threshold and any adopted calibration."
+        ),
     )
     parser.add_argument(
         "--threshold",
@@ -50,6 +124,14 @@ def main() -> None:
         type=Path,
         default=None,
         help="Write metrics as JSON to this path",
+    )
+    parser.add_argument(
+        "--save-predictions",
+        action="store_true",
+        help=(
+            "Include per-sample probabilities and targets in the saved report, "
+            "so Stage 18 hybrids can be computed without a second evaluation."
+        ),
     )
     args = parser.parse_args()
 
@@ -81,6 +163,31 @@ def main() -> None:
     print(f"  best validation F1    : {saved_f1:.4f}")
     print(f"  validation threshold  : {saved_threshold:.4f}")
     print(f"  architecture          : {payload.get('config', {})}")
+
+    # ---- decision policy -------------------------------------------------
+    # Precedence: explicit CLI override (diagnostic only) > frozen policy file
+    # > the threshold the trainer selected on validation.
+    policy = {}
+
+    if args.policy:
+        if not args.policy.exists():
+            print(f"\nERROR: policy file not found: {args.policy}")
+            raise SystemExit(1)
+
+        policy = json.loads(args.policy.read_text(encoding="utf-8"))
+
+        if policy.get("selected_on") != "validation":
+            print(
+                f"\nERROR: {args.policy} was not selected on validation "
+                f"(selected_on={policy.get('selected_on')!r}). Refusing to use it."
+            )
+            raise SystemExit(1)
+
+        saved_threshold = policy["threshold"]
+        print(f"\n  Frozen policy: {args.policy}")
+        print(f"    objective   : {policy.get('objective')}")
+        print(f"    threshold   : {saved_threshold:.4f}")
+        print(f"    calibration : {policy.get('calibration', {}).get('method') or 'none'}")
 
     threshold = args.threshold if args.threshold is not None else saved_threshold
 
@@ -123,6 +230,21 @@ def main() -> None:
     print(f"  predictions: {probabilities.shape}  targets: {targets.shape}")
     print("  " + memory_report())
 
+    # ---- frozen calibration ------------------------------------------------
+    raw_probabilities = probabilities
+    calibration = policy.get("calibration") or {}
+
+    if calibration.get("adopt") and calibration.get("parameters"):
+        from backend.ml.evaluation.calibration import calibrator_from_dict
+
+        calibrator = calibrator_from_dict(calibration["parameters"])
+        probabilities = calibrator.predict(probabilities)
+
+        print(
+            f"\n  Applied frozen {calibration['method']} calibration "
+            f"(fitted on validation, not on this split)."
+        )
+
     # ---- metrics -----------------------------------------------------------
     baseline = evaluate_at_threshold(
         probabilities,
@@ -148,18 +270,72 @@ def main() -> None:
     print(f"    precision : {tuned.precision:.4f}")
     print(f"    recall    : {tuned.recall:.4f}")
     print(f"    F1        : {tuned.f1:.4f}")
-    print(f"    ROC-AUC   : {tuned.roc_auc:.4f}")
+    print(f"    MCC       : {tuned.mcc:.4f}")
+    print(f"    PR-AUC    : {tuned.pr_auc:.4f}  (baseline {tuned.positive_rate:.4f})")
+    print(f"    ROC-AUC   : {tuned.roc_auc:.4f}  (optimistic under imbalance)")
+    print(f"    Brier     : {tuned.brier:.4f}")
     print(f"    accuracy  : {tuned.accuracy:.4f}  (least informative here)")
+
+    # The operational reading matters more than the headline float.
+    print(
+        f"\n  In operational terms, on {tuned.support_positive + tuned.support_negative} "
+        f"functions:"
+    )
+    print(
+        f"    {tuned.tp} of {tuned.support_positive} vulnerabilities found, "
+        f"{tuned.fn} missed"
+    )
+    print(
+        f"    {tuned.fp} false alarms raised against {tuned.support_negative} "
+        f"benign functions"
+    )
+
+    if tuned.predicted_positive:
+        print(
+            f"    a reviewer working the alerts sees a true vulnerability "
+            f"{tuned.precision:.1%} of the time"
+        )
+
+    # ---- calibration on the held-out split ---------------------------------
+    from backend.ml.evaluation.calibration import calibration_report, format_calibration
+
+    held_out_calibration = calibration_report(probabilities, targets)
+    print("\n" + format_calibration(
+        held_out_calibration, f"{args.split.upper()} CALIBRATION (measured, not fitted)"
+    ))
+
+    # ---- evaluation ledger --------------------------------------------------
+    # The test split is meant to be evaluated once, after every choice is
+    # frozen. Nothing can technically stop a second run, but an append-only
+    # ledger makes it visible rather than invisible - if this file lists several
+    # different checkpoints, the "held-out" number has been selected on.
+    if args.split == "test":
+        _record_test_evaluation(args, tuned)
 
     if args.save_report:
         report = {
             "split": args.split,
             "checkpoint": str(args.checkpoint),
             "validation_selected_threshold": threshold,
+            "threshold": threshold,
             "best_validation_f1": saved_f1,
+            "policy": str(args.policy) if args.policy else None,
+            "calibration_applied": bool(calibration.get("adopt")),
+            "n_samples": int(targets.size),
+            "n_positive": int(targets.sum()),
+            "n_negative": int((targets == 0).sum()),
             "metrics_at_0.5": baseline.to_dict(),
             "metrics_at_selected_threshold": tuned.to_dict(),
+            "calibration_measured": held_out_calibration,
         }
+
+        if args.save_predictions:
+            # Stored so Stage 18 hybrids can be built arithmetically instead of
+            # running the model over the test split a second time, which would
+            # break the evaluate-once guarantee.
+            report["probabilities"] = [float(p) for p in probabilities]
+            report["raw_probabilities"] = [float(p) for p in raw_probabilities]
+            report["targets"] = [int(t) for t in targets]
 
         args.save_report.parent.mkdir(parents=True, exist_ok=True)
         args.save_report.write_text(json.dumps(report, indent=2), encoding="utf-8")

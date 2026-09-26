@@ -40,12 +40,13 @@ class HierarchicalCodeBERTClassifier(nn.Module):
         if chunk_pooling not in ("cls", "mean"):
             raise ValueError(f"Unknown chunk_pooling: {chunk_pooling}")
 
-        if function_pooling not in ("mean", "max"):
+        if function_pooling not in ("mean", "max", "attention"):
             raise ValueError(f"Unknown function_pooling: {function_pooling}")
 
         self.model_name = model_name
         self.chunk_pooling = chunk_pooling
         self.function_pooling = function_pooling
+        self.dropout_p = float(dropout)
         self.chunk_micro_batch = max(1, chunk_micro_batch)
 
         if encoder is not None:
@@ -61,14 +62,45 @@ class HierarchicalCodeBERTClassifier(nn.Module):
 
         hidden_size = self.encoder_config.hidden_size
 
+        self.hidden_size = hidden_size
         self.dropout = nn.Dropout(dropout)
         self.classifier = nn.Linear(hidden_size, 1)
 
         nn.init.normal_(self.classifier.weight, std=0.02)
         nn.init.zeros_(self.classifier.bias)
 
+        # Gated attention pooling: a learned scalar score per chunk, softmaxed
+        # within each function. Only built for the "attention" variant so the
+        # mean/max checkpoints keep exactly the state_dict they always had.
+        if function_pooling == "attention":
+            self.attention = nn.Sequential(
+                nn.Linear(hidden_size, hidden_size // 2),
+                nn.Tanh(),
+                nn.Linear(hidden_size // 2, 1),
+            )
+        else:
+            self.attention = None
+
         if gradient_checkpointing:
             self.enable_gradient_checkpointing()
+
+    def arch_config(self) -> dict:
+        """
+        The architecture settings this instance was actually built with.
+
+        Checkpoints must record these rather than the module-level config:
+        a model constructed with function_pooling="attention" while the
+        environment still said "mean" would otherwise be saved as "mean" and
+        silently rebuilt as the wrong architecture at load time.
+        """
+
+        return {
+            "model_name": self.model_name,
+            "chunk_pooling": self.chunk_pooling,
+            "function_pooling": self.function_pooling,
+            "dropout": self.dropout_p,
+            "hidden_size": self.hidden_size,
+        }
 
     # ------------------------------------------------------------------
     # Memory controls
@@ -98,10 +130,28 @@ class HierarchicalCodeBERTClassifier(nn.Module):
         """
         Run CodeBERT over [N, L] chunks and return [N, H] chunk embeddings.
 
-        Chunks are pushed through in micro-batches so that peak activation
-        memory is bounded by ``chunk_micro_batch`` rather than by however many
-        chunks the batch happened to expand into. Results are concatenated,
-        so the autograd graph is preserved and gradients still flow.
+        Chunks are pushed through in micro-batches, and the results are
+        concatenated so the autograd graph is preserved and gradients flow.
+
+        What ``chunk_micro_batch`` actually bounds
+        ------------------------------------------
+        Under ``no_grad`` it is the dominant memory lever, because each
+        micro-batch's activations are freed as soon as its embeddings are
+        taken. Under grad it is only a mild one: autograd must retain what it
+        needs for backward across *every* micro-batch, so total memory tracks
+        the number of chunks in the batch no matter how they were fed through.
+
+        Measured on an RTX 3050, 32 chunks x 512 tokens, gradient checkpointing
+        on, peak MiB above baseline:
+
+            micro_batch      1     2     4     8    16    32
+            inference       81    79   108   168   288   528     <- 6.7x range
+            training      1260  1213  1167  1225  1290  1619     <- ~1.4x range
+
+        So when a *training* step OOMs, reducing this first will disappoint:
+        the effective levers are batch size and MAX_CHUNKS_PER_FUNCTION, which
+        reduce the chunk count itself. Reducing it below about 4 buys nothing
+        in either mode and costs throughput.
         """
 
         total = input_ids.size(0)
@@ -141,6 +191,43 @@ class HierarchicalCodeBERTClassifier(nn.Module):
         """Scatter-aggregate [N, H] chunk embeddings into [B, H]."""
 
         hidden_size = chunk_embeddings.size(-1)
+
+        if self.function_pooling == "attention":
+            scores = self.attention(chunk_embeddings).squeeze(-1)  # [N]
+
+            # Segment softmax over the chunks of each function. The per-function
+            # max is subtracted first so exp() cannot overflow in fp16.
+            max_per_function = torch.full(
+                (batch_size,),
+                float("-inf"),
+                dtype=scores.dtype,
+                device=scores.device,
+            ).scatter_reduce(
+                0, function_index, scores, reduce="amax", include_self=True
+            )
+
+            weights = (scores - max_per_function[function_index]).exp()
+
+            denominator = torch.zeros(
+                batch_size, dtype=scores.dtype, device=scores.device
+            )
+            denominator.index_add_(0, function_index, weights)
+
+            # clamp_min guards only the no-chunk function; a real function
+            # always contributes at least one weight of exp(0) = 1.
+            weights = weights / denominator[function_index].clamp_min(1e-9)
+
+            pooled = torch.zeros(
+                batch_size,
+                hidden_size,
+                dtype=chunk_embeddings.dtype,
+                device=chunk_embeddings.device,
+            )
+            pooled.index_add_(
+                0, function_index, chunk_embeddings * weights.unsqueeze(-1)
+            )
+
+            return pooled
 
         if self.function_pooling == "mean":
             summed = torch.zeros(

@@ -212,98 +212,13 @@
 </header>
 <!-- Main Content -->
 <main class="ml-[260px] mt-16 flex-1 h-[calc(100vh-64px)] overflow-y-auto p-margin relative z-10">
-<div class="max-w-[1440px] mx-auto space-y-6">
-<!-- Page Header -->
-<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 fade-in">
-<div>
-<h2 class="text-headline-lg font-headline-lg text-on-surface tracking-tight">Security Reports</h2>
-<p class="text-body-lg font-body-lg text-on-surface-variant mt-1">Generate, review, and export security analysis reports.</p>
-</div>
-<div class="flex gap-3">
-<button class="btn-secondary px-4 py-2 rounded flex items-center gap-2 font-label-sm text-label-sm uppercase">
-<span class="material-symbols-outlined text-[18px]">download</span>
-                        Export Report
-                    </button>
-<button class="btn-primary px-4 py-2 rounded flex items-center gap-2 font-label-sm text-label-sm uppercase font-bold">
-<span class="material-symbols-outlined text-[18px]">add</span>
-                        Generate Report
-                    </button>
-</div>
-</div>
-<!-- Summary Cards -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 fade-in stagger-1">
-<div class="glass-panel p-6 rounded-lg relative overflow-hidden group">
-<div class="flex justify-between items-start mb-4">
-<p class="text-label-sm font-label-sm text-on-surface-variant uppercase">TOTAL REPORTS</p>
-<span class="material-symbols-outlined text-on-surface-variant opacity-50">description</span>
-</div>
-<div class="text-headline-lg font-headline-lg">24</div>
-</div>
-<div class="glass-panel p-6 rounded-lg relative overflow-hidden group">
-<div class="flex justify-between items-start mb-4">
-<p class="text-label-sm font-label-sm text-on-surface-variant uppercase">GENERATED THIS MONTH</p>
-<span class="material-symbols-outlined text-on-surface-variant opacity-50">calendar_month</span>
-</div>
-<div class="text-headline-lg font-headline-lg">8</div>
-</div>
-<div class="glass-panel p-6 rounded-lg relative overflow-hidden group">
-<div class="absolute -right-10 -top-10 w-32 h-32 bg-primary-container/10 rounded-full blur-2xl group-hover:bg-primary-container/20 transition-all"></div>
-<div class="flex justify-between items-start mb-4 relative z-10">
-<p class="text-label-sm font-label-sm text-on-surface-variant uppercase">AVERAGE SECURITY SCORE</p>
-<span class="material-symbols-outlined text-primary-container opacity-80">grade</span>
-</div>
-<div class="text-headline-lg font-headline-lg text-primary-container relative z-10">89.4</div>
-</div>
-<div class="glass-panel p-6 rounded-lg relative overflow-hidden group border-error-container/30">
-<div class="absolute -right-10 -bottom-10 w-32 h-32 bg-error/10 rounded-full blur-2xl group-hover:bg-error/20 transition-all"></div>
-<div class="flex justify-between items-start mb-4 relative z-10">
-<p class="text-label-sm font-label-sm text-on-surface-variant uppercase">CRITICAL FINDINGS</p>
-<span class="material-symbols-outlined text-error opacity-80">warning</span>
-</div>
-<div class="text-headline-lg font-headline-lg text-error relative z-10">4</div>
-</div>
-</div>
-<!-- Search & Filters -->
-<div class="glass-panel p-4 rounded-lg flex flex-col lg:flex-row gap-4 items-center fade-in stagger-2">
-<div class="relative flex-1 w-full">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-<input class="input-dark w-full pl-10 pr-4 py-2 rounded font-code-md text-code-md" placeholder="Search reports..." type="text">
-</div>
-<div class="flex flex-wrap gap-3 w-full lg:w-auto">
-<select class="input-dark py-2 px-3 rounded font-label-sm text-label-sm uppercase appearance-none cursor-pointer">
-<option value="all">TYPE: All</option>
-<option value="file">File</option>
-<option value="repo">Repo</option>
-</select>
-<select class="input-dark py-2 px-3 rounded font-label-sm text-label-sm uppercase appearance-none cursor-pointer">
-<option value="all">STATUS: All</option>
-<option value="generated">Generated</option>
-<option value="processing">Processing</option>
-<option value="failed">Failed</option>
-</select>
-<select class="input-dark py-2 px-3 rounded font-label-sm text-label-sm uppercase appearance-none cursor-pointer">
-<option value="all">SEVERITY: All</option>
-<option value="critical">Critical</option>
-<option value="high">High</option>
-<option value="medium">Medium</option>
-<option value="low">Low</option>
-</select>
-<select class="input-dark py-2 px-3 rounded font-label-sm text-label-sm uppercase appearance-none cursor-pointer border-primary-container/30">
-<option>Sort by: Most Recent</option>
-</select>
-</div>
-</div>
-<!-- Report List -->
-<div class="glass-panel rounded-lg overflow-hidden fade-in stagger-3 flex flex-col">
-<div class="px-6 py-4 border-b border-outline-variant/30 flex justify-between items-center">
-<h3 class="text-headline-md font-headline-md">Recent Reports</h3>
-</div>
-<div class="overflow-x-auto">
-<table class="w-full text-left border-collapse"><thead><tr class="border-b border-outline-variant/20 bg-black/20"><th class="px-2 py-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">REPORT</th><th class="px-2 py-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">TYPE</th><th class="px-2 py-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">TARGET</th><th class="px-2 py-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">SCORE</th><th class="px-2 py-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">FINDINGS</th><th class="px-2 py-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">GENERATED</th><th class="px-2 py-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">STATUS</th><th class="px-2 py-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider text-right">ACTION</th></tr></thead><tbody class="text-label-sm divide-y divide-outline-variant/10"><tr class="hover:bg-white/5 transition-colors group cursor-pointer"><td class="px-2 py-4 whitespace-nowrap flex items-center gap-2"><span class="material-symbols-outlined text-primary-container opacity-80 text-[18px]">folder_zip</span><span class="font-body-md text-on-surface group-hover:text-primary-container transition-colors">Security Audit — payment-service</span></td><td class="px-2 py-4 whitespace-nowrap text-on-surface-variant">Repository</td><td class="px-2 py-4 whitespace-nowrap">payment-service</td><td class="px-2 py-4 whitespace-nowrap"><span class="text-primary-container">92</span><span class="text-on-surface-variant">/100</span></td><td class="px-2 py-4 whitespace-nowrap text-error">4 findings</td><td class="px-2 py-4 whitespace-nowrap text-on-surface-variant">Today</td><td class="px-2 py-4 whitespace-nowrap"><span class="inline-flex items-center gap-1.5 text-primary-container font-medium">● Generated</span></td><td class="px-2 py-4 whitespace-nowrap text-right"><button class="text-primary-container hover:text-primary-fixed text-label-sm font-label-sm uppercase flex items-center justify-end w-full gap-1 transition-transform group-hover:translate-x-1">View Report →</button></td></tr><tr class="hover:bg-white/5 transition-colors group cursor-pointer"><td class="px-2 py-4 whitespace-nowrap flex items-center gap-2"><span class="material-symbols-outlined text-secondary-container opacity-80 text-[18px]">description</span><span class="font-body-md text-on-surface group-hover:text-primary-container transition-colors">Code Security Scan — main.cpp</span></td><td class="px-2 py-4 whitespace-nowrap text-on-surface-variant">File</td><td class="px-2 py-4 whitespace-nowrap">main.cpp</td><td class="px-2 py-4 whitespace-nowrap"><span class="text-error">78</span><span class="text-on-surface-variant">/100</span></td><td class="px-2 py-4 whitespace-nowrap text-error font-bold">13 findings</td><td class="px-2 py-4 whitespace-nowrap text-on-surface-variant">Yesterday</td><td class="px-2 py-4 whitespace-nowrap"><span class="inline-flex items-center gap-1.5 text-primary-container font-medium">● Generated</span></td><td class="px-2 py-4 whitespace-nowrap text-right"><button class="text-primary-container hover:text-primary-fixed text-label-sm font-label-sm uppercase flex items-center justify-end w-full gap-1 transition-transform group-hover:translate-x-1">View Report →</button></td></tr><tr class="hover:bg-white/5 transition-colors group cursor-pointer"><td class="px-2 py-4 whitespace-nowrap flex items-center gap-2"><span class="material-symbols-outlined text-secondary-container opacity-80 text-[18px]">description</span><span class="font-body-md text-on-surface group-hover:text-primary-container transition-colors">Security Review — auth.py</span></td><td class="px-2 py-4 whitespace-nowrap text-on-surface-variant">File</td><td class="px-2 py-4 whitespace-nowrap">auth.py</td><td class="px-2 py-4 whitespace-nowrap"><span class="text-primary-container">96</span><span class="text-on-surface-variant">/100</span></td><td class="px-2 py-4 whitespace-nowrap text-on-surface-variant">2 findings</td><td class="px-2 py-4 whitespace-nowrap text-on-surface-variant">2 days ago</td><td class="px-2 py-4 whitespace-nowrap"><span class="inline-flex items-center gap-1.5 text-primary-container font-medium">● Generated</span></td><td class="px-2 py-4 whitespace-nowrap text-right"><button class="text-primary-container hover:text-primary-fixed text-label-sm font-label-sm uppercase flex items-center justify-end w-full gap-1 transition-transform group-hover:translate-x-1">View Report →</button></td></tr></tbody></table>
-</div>
-</div>
+<div class="glass-panel rounded-xl p-6">
+<h2 class="font-headline-md text-[20px] font-bold text-on-surface mb-1">Reports</h2>
+<p class="font-body-md text-[13px] text-on-surface-variant mb-4">Report generation requires stored analyses, which are not implemented.</p>
+<div id="cs-results"></div>
 </div>
 </main>
+<script type="module" src="../assets/js/notimpl-reports.js"></script>
 
 
 </body></html>

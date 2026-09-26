@@ -29,6 +29,11 @@ from pathlib import Path
 from backend.ml import config
 from backend.ml.utils.io import detect_field, read_jsonl
 
+# How many leading records may be scanned for the code/label field names before
+# the file is declared unreadable. PrimeVul has them on record 1; this only
+# buys tolerance for a malformed header record.
+SCHEMA_DETECTION_RECORDS = 100
+
 
 def normalize_code(code) -> str:
     """Light normalisation that preserves source structure and indentation."""
@@ -104,15 +109,28 @@ def process_split(split: str, input_path: Path, output_path: Path, dedupe: bool)
         for _, record in read_jsonl(input_path, skip_invalid=True):
             stats["read"] += 1
 
+            # Each field is detected independently and retried until found,
+            # rather than both being read off record #1. A single first record
+            # that happens to omit one field no longer aborts the whole split.
             if code_field is None:
                 code_field = detect_field(record, config.CODE_FIELD_CANDIDATES)
+
+            if label_field is None:
                 label_field = detect_field(record, config.LABEL_FIELD_CANDIDATES)
 
-                if code_field is None or label_field is None:
+            if code_field is None or label_field is None:
+                # Give the file a reasonable chance before declaring the schema
+                # unreadable, but still fail loudly rather than writing an
+                # empty output file and calling it success.
+                if stats["read"] >= SCHEMA_DETECTION_RECORDS:
                     raise ValueError(
-                        f"{input_path}: could not detect code/label fields. "
-                        f"Saw keys: {sorted(record)}"
+                        f"{input_path}: could not detect code/label fields in the "
+                        f"first {SCHEMA_DETECTION_RECORDS} records. "
+                        f"Last record's keys: {sorted(record)}"
                     )
+
+                stats["skipped_before_schema_detected"] += 1
+                continue
 
             code = normalize_code(record.get(code_field))
 
@@ -163,6 +181,10 @@ def process_split(split: str, input_path: Path, output_path: Path, dedupe: bool)
     print(f"  dropped empty code  : {stats['dropped_empty_code']}")
     print(f"  dropped bad label   : {stats['dropped_bad_label']}")
     print(f"  dropped duplicates  : {stats['dropped_duplicate']}")
+    if stats["skipped_before_schema_detected"]:
+        print(
+            f"  skipped pre-schema  : {stats['skipped_before_schema_detected']}"
+        )
     print(f"  vulnerable (1)      : {labels[1]}")
     print(f"  benign (0)          : {labels[0]}")
 

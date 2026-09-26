@@ -993,9 +993,16 @@ def test_trainer_full_loop_produces_checkpoints(trainable_chunked_file, tmp_path
     payload = torch.load(trainer.best_path, map_location="cpu", weights_only=False)
     assert payload["best_threshold"] == pytest.approx(result["best_threshold"])
     assert payload["best_f1"] == pytest.approx(result["best_f1"])
-    assert "metrics" in payload and payload["metrics"]["f1"] == pytest.approx(
-        result["best_f1"]
+
+    # "best_f1" is a legacy key holding whatever metric `monitor` names, which
+    # now defaults to PR-AUC. The saved metrics block must agree with it on
+    # that metric specifically.
+    assert "metrics" in payload
+    assert payload["metrics"][trainer.monitor] == pytest.approx(
+        result["best_score"]
     )
+    assert result["monitor"] == trainer.monitor
+    assert result["best_epoch"] >= 1
 
 
 def test_trainer_learns_a_separable_signal(trainable_chunked_file, tmp_path):
