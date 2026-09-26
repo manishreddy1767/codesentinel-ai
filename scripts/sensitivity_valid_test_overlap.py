@@ -32,6 +32,14 @@ from pathlib import Path
 
 import numpy as np
 
+# Allow the documented invocation (`python scripts/<name>.py`) to work: running a
+# script by path puts *its own* directory on sys.path, not the repository root,
+# so `import backend...` would fail. Prepending the root keeps the form printed
+# in the docstring above honest without requiring PYTHONPATH to be set.
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from backend.ml.training.metrics import compute_metrics
 from backend.ml.utils.io import read_jsonl
 
